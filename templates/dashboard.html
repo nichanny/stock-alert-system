@@ -413,11 +413,19 @@
     <script>
         let currentEditSymbol = null;
         
-        // Load alerts on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        // Load alerts on page load - use window.onload for reliability
+        window.addEventListener('load', function() {
             loadAlerts();
             loadHistory();
-            setInterval(loadAlerts, 30000); // Refresh every 30 seconds
+            setInterval(loadAlerts, 60000); // Refresh every 60 seconds
+        });
+        
+        // Also try DOMContentLoaded as backup
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                loadAlerts();
+                loadHistory();
+            }, 500);
         });
         
         function loadAlerts() {
@@ -437,27 +445,30 @@
                     let belowTarget = 0;
                     
                     alerts.forEach(alert => {
-                        const currentPrice = alert.current_price || 'N/A';
-                        const status = alert.status || 'unknown';
-                        let statusClass = 'status-above';
-                        let statusText = 'Above Target';
+                        const currentPrice = alert.current_price;
+                        const isBelow = currentPrice && currentPrice <= alert.buy_price;
+                        let statusClass = isBelow ? 'status-below' : 'status-above';
+                        let statusText = isBelow ? '🔔 Buy Now!' : '⏳ Waiting';
+                        const distPct = currentPrice ? (((currentPrice - alert.buy_price) / alert.buy_price) * 100).toFixed(1) : 'N/A';
+                        const distColor = isBelow ? 'color:#155724' : (parseFloat(distPct) < 5 ? 'color:#856404' : 'color:#666');
                         
-                        if (status === 'below_target') {
+                        if (isBelow) {
                             statusClass = 'status-below';
-                            statusText = '🔔 Below Target';
+                            statusText = '🔔 Buy Now!';
                             belowTarget++;
-                        } else if (status === 'error') {
+                        } else if (!currentPrice) {
                             statusClass = 'status-error';
-                            statusText = 'Error';
+                            statusText = 'No Data';
                         }
                         
                         html += `
                             <div class="alert-item">
                                 <div class="alert-info">
-                                    <div class="alert-symbol">${alert.symbol}</div>
+                                    <div class="alert-symbol">${alert.symbol} <small style="color:#999;font-weight:normal;font-size:12px">${alert.company_name || ''}</small></div>
                                     <div class="alert-prices">
-                                        Current: $${typeof currentPrice === 'number' ? currentPrice.toFixed(2) : currentPrice} | 
-                                        Target: $${alert.buy_price.toFixed(2)}
+                                        Current: <strong>$${currentPrice ? currentPrice.toFixed(2) : 'N/A'}</strong> | 
+                                        Target: $${alert.buy_price.toFixed(2)} | 
+                                        <span style="${distColor}">Distance: ${distPct}%</span>
                                     </div>
                                 </div>
                                 <div class="alert-status ${statusClass}">${statusText}</div>
