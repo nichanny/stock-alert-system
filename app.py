@@ -253,7 +253,8 @@ def index():
                 alert_copy['distance_pct'] = 0
                 alert_copy['status'] = 'error'
         enriched_alerts.append(alert_copy)
-    return render_template('dashboard.html', alerts=enriched_alerts, history=history[-20:])
+    now_thai = datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M:%S')
+    return render_template('dashboard.html', alerts=enriched_alerts, history=history[-20:], market_open=is_market_open(), now=now_thai)
 
 
 @app.route('/api/alerts', methods=['GET'])

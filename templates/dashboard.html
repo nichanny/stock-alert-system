@@ -1,620 +1,440 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Price Alert Dashboard</title>
+    <title>📈 Stock Price Alert Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
+        .container { max-width: 1200px; margin: 0 auto; }
         .header {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-        
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .card h2 {
-            color: #333;
+            border-radius: 16px;
+            padding: 24px 30px;
             margin-bottom: 20px;
-            font-size: 20px;
-        }
-        
-        .alert-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            background: #f9f9f9;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        
-        .alert-item:hover {
-            background: #f0f0f0;
-        }
-        
-        .alert-info {
-            flex: 1;
-        }
-        
-        .alert-symbol {
-            font-weight: bold;
-            color: #667eea;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-        
-        .alert-prices {
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .alert-status {
-            padding: 5px 10px;
+        .header h1 { font-size: 1.7rem; color: #2d3748; }
+        .header p { color: #718096; margin-top: 4px; font-size: 0.9rem; }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .market-badge {
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-right: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
         }
-        
-        .status-below {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .status-above {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .alert-actions {
-            display: flex;
-            gap: 5px;
-        }
-        
+        .market-open { background: #c6f6d5; color: #276749; }
+        .market-closed { background: #fed7d7; color: #9b2c2c; }
         .btn {
-            padding: 8px 12px;
+            padding: 9px 18px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
-        
-        .btn-edit {
-            background: #667eea;
-            color: white;
+        .btn:hover { transform: translateY(-1px); }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; }
+        .btn-danger { background: #fc8181; color: white; font-size: 0.78rem; padding: 5px 10px; }
+        .btn-danger:hover { background: #f56565; }
+        .btn-edit { background: #fbd38d; color: #744210; font-size: 0.78rem; padding: 5px 10px; }
+        .btn-edit:hover { background: #f6ad55; }
+        .btn-telegram { background: #0088cc; color: white; }
+        .btn-telegram:hover { background: #0077b5; }
+        .btn-refresh { background: none; border: 2px solid #667eea; color: #667eea; }
+        .btn-refresh:hover { background: #667eea; color: white; }
+        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
         }
-        
-        .btn-edit:hover {
-            background: #5568d3;
+        .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
         }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
+        .card-title h2 { font-size: 1.05rem; color: #2d3748; font-weight: 700; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .stat-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
         }
-        
-        .btn-delete:hover {
-            background: #c82333;
+        .stat-num { font-size: 2.2rem; font-weight: 800; color: #667eea; }
+        .stat-num.red { color: #e53e3e; }
+        .stat-lbl { font-size: 0.78rem; color: #718096; margin-top: 4px; }
+        .alert-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            gap: 10px;
         }
-        
-        .btn-add {
-            background: #28a745;
-            color: white;
-            padding: 10px 20px;
-            width: 100%;
-            margin-bottom: 20px;
+        .alert-row:hover { transform: translateX(2px); }
+        .row-above { background: #f0fff4; border-color: #9ae6b4; }
+        .row-below { background: #fff5f5; border-color: #fc8181; animation: glow 2s infinite; }
+        .row-nodata { background: #f7fafc; border-color: #e2e8f0; }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(252,129,129,0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(252,129,129,0); }
         }
-        
-        .btn-add:hover {
-            background: #218838;
+        .row-icon { font-size: 1.3rem; flex-shrink: 0; }
+        .row-info { flex: 1; min-width: 0; }
+        .row-symbol { font-size: 1.05rem; font-weight: 800; color: #2d3748; }
+        .row-company { font-size: 0.78rem; color: #a0aec0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .row-target { font-size: 0.78rem; color: #718096; margin-top: 2px; }
+        .row-prices { text-align: right; min-width: 120px; }
+        .price-val { font-size: 1.2rem; font-weight: 800; }
+        .price-up { color: #38a169; }
+        .price-down { color: #e53e3e; }
+        .price-na { color: #a0aec0; }
+        .price-chg { font-size: 0.78rem; color: #718096; margin-top: 1px; }
+        .dist-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-top: 3px;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
-        }
-        
+        .dist-pos { background: #c6f6d5; color: #276749; }
+        .dist-neg { background: #fed7d7; color: #9b2c2c; }
+        .row-actions { display: flex; gap: 5px; flex-shrink: 0; }
         .history-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-            color: #666;
+            padding: 10px 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 3px solid #667eea;
         }
-        
-        .history-item:last-child {
-            border-bottom: none;
-        }
-        
-        .history-symbol {
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .history-time {
-            color: #999;
-            font-size: 12px;
-        }
-        
-        .modal {
+        .h-sym { font-weight: 700; color: #2d3748; font-size: 0.9rem; }
+        .h-msg { font-size: 0.82rem; color: #4a5568; margin-top: 2px; }
+        .h-time { font-size: 0.72rem; color: #a0aec0; margin-top: 2px; }
+        .empty { text-align: center; padding: 36px 20px; color: #a0aec0; }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .modal-bg {
             display: none;
             position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-bg.on { display: flex; }
+        .modal-box {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            width: 92%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .modal-box h3 { font-size: 1.15rem; color: #2d3748; margin-bottom: 18px; }
+        .fg { margin-bottom: 14px; }
+        .fg label { display: block; font-size: 0.82rem; font-weight: 600; color: #4a5568; margin-bottom: 5px; }
+        .fg input {
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            padding: 9px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            transition: border-color 0.2s;
         }
-        
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 30px;
+        .fg input:focus { outline: none; border-color: #667eea; }
+        .fg input:disabled { background: #f7fafc; color: #a0aec0; }
+        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+        .btn-cancel { background: #e2e8f0; color: #4a5568; }
+        .btn-cancel:hover { background: #cbd5e0; }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 18px;
             border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-        
-        .modal-header {
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #333;
-        }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .close:hover {
-            color: #000;
-        }
-        
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .modal-buttons button {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .btn-save {
-            background: #28a745;
             color: white;
+            font-weight: 600;
+            font-size: 0.88rem;
+            z-index: 9999;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s;
+            max-width: 300px;
         }
-        
-        .btn-save:hover {
-            background: #218838;
-        }
-        
-        .btn-cancel {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-cancel:hover {
-            background: #5a6268;
-        }
-        
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-box {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-        }
-        
-        .empty-state p {
-            margin-bottom: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .alert-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .alert-actions {
-                width: 100%;
-                margin-top: 10px;
-            }
-            
-            .btn {
-                flex: 1;
-            }
-        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-ok { background: #48bb78; }
+        .toast-err { background: #f56565; }
+        .toast-info { background: #4299e1; }
+        .last-upd { font-size: 0.72rem; color: #a0aec0; margin-top: 6px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div>
             <h1>📈 Stock Price Alert Dashboard</h1>
-            <p>Real-time stock price monitoring with Telegram alerts</p>
+            <p>Real-time monitoring · Telegram alerts · ตรวจสอบทุก 1 นาที</p>
         </div>
-        
-        <div class="main-content">
-            <!-- Alerts Section -->
+        <div class="header-actions">
+            {% if market_open %}
+            <span class="market-badge market-open">🟢 ตลาดเปิด</span>
+            {% else %}
+            <span class="market-badge market-closed">🔴 ตลาดปิด</span>
+            {% endif %}
+            <button class="btn btn-telegram" onclick="testTelegram()">🔔 Test Telegram</button>
+            <button class="btn btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="grid">
+
+        <!-- Left: Alert List -->
+        <div class="card">
+            <div class="card-title">
+                <h2>🎯 Active Alerts ({{ alerts|length }} หุ้น)</h2>
+                <button class="btn btn-primary" onclick="openAdd()">+ เพิ่มหุ้น</button>
+            </div>
+
+            {% if alerts %}
+                {% for a in alerts %}
+                <div class="alert-row {% if a.status == 'below_target' %}row-below{% elif a.status == 'above_target' %}row-above{% else %}row-nodata{% endif %}">
+                    <span class="row-icon">{% if a.status == 'below_target' %}🔴{% elif a.status == 'above_target' %}🟢{% else %}⚪{% endif %}</span>
+                    <div class="row-info">
+                        <div class="row-symbol">{{ a.symbol }}</div>
+                        <div class="row-company">{{ a.company_name }}</div>
+                        <div class="row-target">เป้าซื้อ: ${{ "%.2f"|format(a.buy_price) }}</div>
+                    </div>
+                    <div class="row-prices">
+                        {% if a.current_price %}
+                            <div class="price-val {% if a.change > 0 %}price-up{% elif a.change < 0 %}price-down{% else %}price-na{% endif %}">
+                                ${{ "%.2f"|format(a.current_price) }}
+                            </div>
+                            <div class="price-chg">
+                                {% if a.change >= 0 %}▲{% else %}▼{% endif %}
+                                ${{ "%.2f"|format(a.change|abs) }} ({{ "%.1f"|format(a.change_pct|abs) }}%)
+                            </div>
+                            <span class="dist-badge {% if a.distance_pct >= 0 %}dist-pos{% else %}dist-neg{% endif %}">
+                                {% if a.distance_pct >= 0 %}+{% endif %}{{ "%.1f"|format(a.distance_pct) }}% จากเป้า
+                            </span>
+                        {% else %}
+                            <div class="price-val price-na">N/A</div>
+                            <div class="price-chg">ดึงราคาไม่ได้</div>
+                        {% endif %}
+                    </div>
+                    <div class="row-actions">
+                        <button class="btn btn-edit" onclick="openEdit('{{ a.symbol }}',{{ a.buy_price }},'{{ a.company_name }}')">✏️</button>
+                        <button class="btn btn-danger" onclick="delAlert('{{ a.symbol }}')">🗑️</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <div class="empty-icon">📊</div>
+                    <p>ยังไม่มีหุ้นที่ตั้ง alert</p>
+                    <p style="font-size:0.82rem;margin-top:6px;">กด "+ เพิ่มหุ้น" เพื่อเริ่มต้น</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Stats + History -->
+        <div>
+            <div class="card" style="margin-bottom:20px;">
+                <h2 style="font-size:1.05rem;color:#2d3748;font-weight:700;margin-bottom:14px;">📊 สถิติ</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-num">{{ alerts|length }}</div>
+                        <div class="stat-lbl">หุ้นทั้งหมด</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num red">{{ alerts|selectattr('status','equalto','below_target')|list|length }}</div>
+                        <div class="stat-lbl">🔴 ถึงราคาซื้อ</div>
+                    </div>
+                </div>
+                <div class="last-upd" id="lastUpd">อัปเดตล่าสุด: {{ now }}</div>
+            </div>
+
             <div class="card">
-                <h2>Active Alerts</h2>
-                <button class="btn-add" onclick="openAddModal()">+ Add New Alert</button>
-                
-                <div id="alerts-container">
-                    <!-- Alerts will be loaded here -->
-                </div>
-            </div>
-            
-            <!-- Sidebar -->
-            <div>
-                <!-- Statistics -->
-                <div class="card" style="margin-bottom: 20px;">
-                    <h2>Statistics</h2>
-                    <div class="stats">
-                        <div class="stat-box">
-                            <div class="stat-number" id="total-alerts">0</div>
-                            <div class="stat-label">Total Alerts</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-number" id="below-target">0</div>
-                            <div class="stat-label">Below Target</div>
-                        </div>
+                <h2 style="font-size:1.05rem;color:#2d3748;font-weight:700;margin-bottom:14px;">📜 ประวัติ Alert</h2>
+                {% if history %}
+                    {% for h in history|reverse %}
+                    <div class="history-item">
+                        <div class="h-sym">{{ h.symbol }} @ ${{ h.price }}</div>
+                        <div class="h-msg">{{ h.message }}</div>
+                        <div class="h-time">{{ h.timestamp }}</div>
                     </div>
-                </div>
-                
-                <!-- Recent History -->
-                <div class="card">
-                    <h2>Recent Alerts</h2>
-                    <div id="history-container">
-                        <!-- History will be loaded here -->
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">
+                        <div class="empty-icon">🔕</div>
+                        <p>ยังไม่มีประวัติ alert</p>
                     </div>
-                </div>
+                {% endif %}
             </div>
         </div>
+
     </div>
-    
-    <!-- Add/Edit Modal -->
-    <div id="alertModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span class="close" onclick="closeModal()">&times;</span>
-                <h2 id="modalTitle">Add New Alert</h2>
-            </div>
-            <form id="alertForm">
-                <div class="form-group">
-                    <label for="symbol">Stock Symbol</label>
-                    <input type="text" id="symbol" name="symbol" placeholder="e.g., AAPL" required>
-                </div>
-                <div class="form-group">
-                    <label for="company_name">Company Name (Optional)</label>
-                    <input type="text" id="company_name" name="company_name" placeholder="e.g., Apple Inc.">
-                </div>
-                <div class="form-group">
-                    <label for="buy_price">Buy Price Target ($)</label>
-                    <input type="number" id="buy_price" name="buy_price" step="0.01" placeholder="e.g., 150.00" required>
-                </div>
-                <div class="modal-buttons">
-                    <button type="submit" class="btn-save">Save</button>
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                </div>
-            </form>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-bg" id="mAdd">
+    <div class="modal-box">
+        <h3>➕ เพิ่มหุ้นใหม่</h3>
+        <div class="fg">
+            <label>Symbol (เช่น AAPL, TSLA)</label>
+            <input type="text" id="aSymbol" placeholder="AAPL" style="text-transform:uppercase">
+        </div>
+        <div class="fg">
+            <label>ชื่อบริษัท (ไม่บังคับ)</label>
+            <input type="text" id="aCompany" placeholder="Apple Inc.">
+        </div>
+        <div class="fg">
+            <label>ราคาซื้อ ($)</label>
+            <input type="number" id="aBuyPrice" placeholder="150.00" step="0.01" min="0.01">
+        </div>
+        <div class="modal-btns">
+            <button class="btn btn-cancel" onclick="closeM('mAdd')">ยกเลิก</button>
+            <button class="btn btn-success" onclick="doAdd()">✅ เพิ่มหุ้น</button>
         </div>
     </div>
-    
-    <script>
-        let currentEditSymbol = null;
-        
-        // Load alerts on page load - use window.onload for reliability
-        window.addEventListener('load', function() {
-            loadAlerts();
-            loadHistory();
-            setInterval(loadAlerts, 60000); // Refresh every 60 seconds
-        });
-        
-        // Also try DOMContentLoaded as backup
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                loadAlerts();
-                loadHistory();
-            }, 500);
-        });
-        
-        function loadAlerts() {
-            fetch('/api/alerts')
-                .then(response => response.json())
-                .then(alerts => {
-                    const container = document.getElementById('alerts-container');
-                    
-                    if (alerts.length === 0) {
-                        container.innerHTML = '<div class="empty-state"><p>No alerts yet. Add one to get started!</p></div>';
-                        document.getElementById('total-alerts').textContent = '0';
-                        document.getElementById('below-target').textContent = '0';
-                        return;
-                    }
-                    
-                    let html = '';
-                    let belowTarget = 0;
-                    
-                    alerts.forEach(alert => {
-                        const currentPrice = alert.current_price;
-                        const isBelow = currentPrice && currentPrice <= alert.buy_price;
-                        let statusClass = isBelow ? 'status-below' : 'status-above';
-                        let statusText = isBelow ? '🔔 Buy Now!' : '⏳ Waiting';
-                        const distPct = currentPrice ? (((currentPrice - alert.buy_price) / alert.buy_price) * 100).toFixed(1) : 'N/A';
-                        const distColor = isBelow ? 'color:#155724' : (parseFloat(distPct) < 5 ? 'color:#856404' : 'color:#666');
-                        
-                        if (isBelow) {
-                            statusClass = 'status-below';
-                            statusText = '🔔 Buy Now!';
-                            belowTarget++;
-                        } else if (!currentPrice) {
-                            statusClass = 'status-error';
-                            statusText = 'No Data';
-                        }
-                        
-                        html += `
-                            <div class="alert-item">
-                                <div class="alert-info">
-                                    <div class="alert-symbol">${alert.symbol} <small style="color:#999;font-weight:normal;font-size:12px">${alert.company_name || ''}</small></div>
-                                    <div class="alert-prices">
-                                        Current: <strong>$${currentPrice ? currentPrice.toFixed(2) : 'N/A'}</strong> | 
-                                        Target: $${alert.buy_price.toFixed(2)} | 
-                                        <span style="${distColor}">Distance: ${distPct}%</span>
-                                    </div>
-                                </div>
-                                <div class="alert-status ${statusClass}">${statusText}</div>
-                                <div class="alert-actions">
-                                    <button class="btn btn-edit" onclick="openEditModal('${alert.symbol}', ${alert.buy_price})">Edit</button>
-                                    <button class="btn btn-delete" onclick="deleteAlert('${alert.symbol}')">Delete</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.innerHTML = html;
-                    document.getElementById('total-alerts').textContent = alerts.length;
-                    document.getElementById('below-target').textContent = belowTarget;
-                })
-                .catch(error => console.error('Error loading alerts:', error));
-        }
-        
-        function loadHistory() {
-            fetch('/api/history')
-                .then(response => response.json())
-                .then(history => {
-                    const container = document.getElementById('history-container');
-                    
-                    if (history.length === 0) {
-                        container.innerHTML = '<div class="empty-state"><p>No alert history yet</p></div>';
-                        return;
-                    }
-                    
-                    let html = '';
-                    history.reverse().forEach(item => {
-                        const time = new Date(item.timestamp).toLocaleString();
-                        html += `
-                            <div class="history-item">
-                                <span class="history-symbol">${item.symbol}</span> reached $${item.current_price.toFixed(2)}
-                                <br>
-                                <span class="history-time">${time}</span>
-                            </div>
-                        `;
-                    });
-                    
-                    container.innerHTML = html;
-                })
-                .catch(error => console.error('Error loading history:', error));
-        }
-        
-        function openAddModal() {
-            currentEditSymbol = null;
-            document.getElementById('modalTitle').textContent = 'Add New Alert';
-            document.getElementById('alertForm').reset();
-            document.getElementById('symbol').disabled = false;
-            document.getElementById('alertModal').style.display = 'block';
-        }
-        
-        function openEditModal(symbol, buyPrice) {
-            currentEditSymbol = symbol;
-            document.getElementById('modalTitle').textContent = 'Edit Alert';
-            document.getElementById('symbol').value = symbol;
-            document.getElementById('symbol').disabled = true;
-            document.getElementById('buy_price').value = buyPrice;
-            document.getElementById('alertModal').style.display = 'block';
-        }
-        
-        function closeModal() {
-            document.getElementById('alertModal').style.display = 'none';
-            currentEditSymbol = null;
-        }
-        
-        document.getElementById('alertForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const symbol = document.getElementById('symbol').value.toUpperCase();
-            const company_name = document.getElementById('company_name').value;
-            const buy_price = parseFloat(document.getElementById('buy_price').value);
-            
-            if (currentEditSymbol) {
-                // Update existing alert
-                fetch(`/api/alerts/${symbol}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        buy_price: buy_price
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert('Error: ' + data.error);
-                    } else {
-                        closeModal();
-                        loadAlerts();
-                    }
-                })
-                .catch(error => console.error('Error updating alert:', error));
-            } else {
-                // Add new alert
-                fetch('/api/alerts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        symbol: symbol,
-                        company_name: company_name,
-                        buy_price: buy_price
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert('Error: ' + data.error);
-                    } else {
-                        closeModal();
-                        loadAlerts();
-                    }
-                })
-                .catch(error => console.error('Error adding alert:', error));
-            }
-        });
-        
-        function deleteAlert(symbol) {
-            if (confirm(`Are you sure you want to delete alert for ${symbol}?`)) {
-                fetch(`/api/alerts/${symbol}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert('Error: ' + data.error);
-                    } else {
-                        loadAlerts();
-                    }
-                })
-                .catch(error => console.error('Error deleting alert:', error));
-            }
-        }
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('alertModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
-    </script>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-bg" id="mEdit">
+    <div class="modal-box">
+        <h3>✏️ แก้ไขราคาซื้อ</h3>
+        <input type="hidden" id="eSym">
+        <div class="fg">
+            <label>Symbol</label>
+            <input type="text" id="eSymD" disabled>
+        </div>
+        <div class="fg">
+            <label>ชื่อบริษัท</label>
+            <input type="text" id="eComp">
+        </div>
+        <div class="fg">
+            <label>ราคาซื้อใหม่ ($)</label>
+            <input type="number" id="eBuyP" step="0.01" min="0.01">
+        </div>
+        <div class="modal-btns">
+            <button class="btn btn-cancel" onclick="closeM('mEdit')">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="doEdit()">💾 บันทึก</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // Auto-refresh every 60 seconds
+    setTimeout(() => location.reload(), 60000);
+
+    function toast(msg, type='ok') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast toast-${type} show`;
+        setTimeout(() => { t.className = `toast toast-${type}`; }, 3500);
+    }
+
+    function openAdd() {
+        ['aSymbol','aCompany','aBuyPrice'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('mAdd').classList.add('on');
+        setTimeout(() => document.getElementById('aSymbol').focus(), 100);
+    }
+
+    function openEdit(sym, price, company) {
+        document.getElementById('eSym').value = sym;
+        document.getElementById('eSymD').value = sym;
+        document.getElementById('eComp').value = company;
+        document.getElementById('eBuyP').value = price;
+        document.getElementById('mEdit').classList.add('on');
+        setTimeout(() => document.getElementById('eBuyP').focus(), 100);
+    }
+
+    function closeM(id) { document.getElementById(id).classList.remove('on'); }
+
+    document.querySelectorAll('.modal-bg').forEach(el => {
+        el.addEventListener('click', e => { if (e.target === el) el.classList.remove('on'); });
+    });
+
+    async function doAdd() {
+        const sym = document.getElementById('aSymbol').value.trim().toUpperCase();
+        const comp = document.getElementById('aCompany').value.trim();
+        const price = parseFloat(document.getElementById('aBuyPrice').value);
+        if (!sym || isNaN(price) || price <= 0) { toast('กรุณากรอก Symbol และราคาให้ถูกต้อง', 'err'); return; }
+        try {
+            const r = await fetch('/api/alerts', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({symbol: sym, company_name: comp || sym, buy_price: price})
+            });
+            const d = await r.json();
+            if (r.ok) { toast(`✅ เพิ่ม ${sym} สำเร็จ!`); closeM('mAdd'); setTimeout(() => location.reload(), 900); }
+            else toast(d.error || 'เกิดข้อผิดพลาด', 'err');
+        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
+    }
+
+    async function doEdit() {
+        const sym = document.getElementById('eSym').value;
+        const comp = document.getElementById('eComp').value.trim();
+        const price = parseFloat(document.getElementById('eBuyP').value);
+        if (isNaN(price) || price <= 0) { toast('กรุณากรอกราคาให้ถูกต้อง', 'err'); return; }
+        try {
+            const r = await fetch(`/api/alerts/${sym}`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({buy_price: price, company_name: comp})
+            });
+            if (r.ok) { toast(`✅ อัปเดต ${sym} สำเร็จ!`); closeM('mEdit'); setTimeout(() => location.reload(), 900); }
+            else toast('เกิดข้อผิดพลาด', 'err');
+        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
+    }
+
+    async function delAlert(sym) {
+        if (!confirm(`ต้องการลบ ${sym} ออกจาก alert list?`)) return;
+        try {
+            const r = await fetch(`/api/alerts/${sym}`, {method: 'DELETE'});
+            if (r.ok) { toast(`🗑️ ลบ ${sym} สำเร็จ!`); setTimeout(() => location.reload(), 900); }
+            else toast('เกิดข้อผิดพลาด', 'err');
+        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
+    }
+
+    async function testTelegram() {
+        toast('กำลังส่ง test message...', 'info');
+        try {
+            const r = await fetch('/api/test-telegram', {method: 'POST'});
+            const d = await r.json();
+            if (d.success) toast('✅ ส่ง Telegram สำเร็จ! ตรวจสอบ Telegram ของคุณ');
+            else toast('❌ ' + (d.error || 'ส่งไม่สำเร็จ'), 'err');
+        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
+    }
+</script>
 </body>
 </html>
