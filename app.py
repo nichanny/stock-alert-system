@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Stock Alert Dashboard
-Web interface for managing stock alerts
-Data stored in environment variable STOCK_ALERTS_DATA to persist on Render free tier
+Stock Alert Dashboard + Background Monitor
+Web interface for managing stock alerts + real-time Telegram alerts
 """
 
 import os
 import json
 import requests
 import logging
-import subprocess
+import time
+import pytz
 from datetime import datetime
+from threading import Thread
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
@@ -19,21 +20,23 @@ load_dotenv()
 
 # Configuration
 FINNHUB_API_KEY = os.getenv('FINNHUB_API_KEY')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+POLLING_INTERVAL = int(os.getenv('POLLING_INTERVAL', 60))
 FINNHUB_QUOTE_URL = "https://finnhub.io/api/v1/quote"
-RENDER_API_KEY = os.getenv('RENDER_API_KEY', '')
-RENDER_SERVICE_ID = os.getenv('RENDER_SERVICE_ID', '')
 
 # Setup logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Create Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'stock-alert-secret-key-2024')
 
-# In-memory storage (loaded from env var at startup)
+# In-memory storage
 _alerts_cache = None
 _history_cache = None
+_last_alert_prices = {}  # Prevent duplicate alerts
 
 # Default stock list
 DEFAULT_ALERTS = [
@@ -51,14 +54,13 @@ DEFAULT_ALERTS = [
 ]
 
 
+# ─── Data Management ──────────────────────────────────────────────────────────
+
 def load_alerts():
-    """Load alerts from environment variable or use defaults"""
     global _alerts_cache, _history_cache
-    
     if _alerts_cache is not None:
         return _alerts_cache, _history_cache
-    
-    # Try loading from env var
+
     alerts_data = os.getenv('STOCK_ALERTS_DATA', '')
     if alerts_data:
         try:
@@ -69,38 +71,22 @@ def load_alerts():
             return _alerts_cache, _history_cache
         except Exception as e:
             logger.error(f"Error parsing STOCK_ALERTS_DATA: {e}")
-    
-    # Use defaults
-    _alerts_cache = DEFAULT_ALERTS.copy()
+
+    _alerts_cache = [a.copy() for a in DEFAULT_ALERTS]
     _history_cache = []
     logger.info(f"Using default {len(_alerts_cache)} alerts")
     return _alerts_cache, _history_cache
 
 
 def save_alerts(alerts, history=None):
-    """Save alerts to in-memory cache (and optionally update Render env var)"""
     global _alerts_cache, _history_cache
-    
     _alerts_cache = alerts
     if history is not None:
         _history_cache = history
-    
-    # Also save to local file as backup
-    try:
-        data = {
-            'alerts': alerts,
-            'alert_history': _history_cache or []
-        }
-        with open('stock_alerts.json', 'w') as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        logger.warning(f"Could not save to file: {e}")
-    
     return True
 
 
 def add_to_history(history, symbol, price, buy_price, message):
-    """Add alert to history"""
     history.append({
         'symbol': symbol,
         'price': price,
@@ -108,21 +94,17 @@ def add_to_history(history, symbol, price, buy_price, message):
         'message': message,
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     })
-    # Keep only last 100 history items
     return history[-100:]
 
 
+# ─── Stock Price ──────────────────────────────────────────────────────────────
+
 def get_stock_price(symbol):
-    """Fetch current stock price from Finnhub API"""
     try:
-        params = {
-            'symbol': symbol,
-            'token': FINNHUB_API_KEY
-        }
+        params = {'symbol': symbol, 'token': FINNHUB_API_KEY}
         response = requests.get(FINNHUB_QUOTE_URL, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
-        
         if 'c' in data and data['c'] > 0:
             return {
                 'price': data['c'],
@@ -139,12 +121,120 @@ def get_stock_price(symbol):
         return None
 
 
+# ─── Telegram ─────────────────────────────────────────────────────────────────
+
+def send_telegram_alert(symbol, current_price, buy_price, company_name=""):
+    try:
+        if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+            logger.warning("Telegram not configured")
+            return False
+
+        change_pct = round(((current_price - buy_price) / buy_price) * 100, 2)
+        now_thai = datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M')
+
+        message = (
+            f"🔔 *STOCK BUY ALERT*\n\n"
+            f"📌 *{symbol}* - {company_name}\n"
+            f"💰 ราคาปัจจุบัน: *${current_price:.2f}*\n"
+            f"🎯 ราคาเป้าหมาย: ${buy_price:.2f}\n"
+            f"📊 ต่ำกว่าเป้า: {abs(change_pct):.1f}%\n"
+            f"🕐 เวลา: {now_thai} (TH)\n\n"
+            f"✅ *ถึงราคาซื้อแล้ว!*"
+        )
+
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            'chat_id': TELEGRAM_CHAT_ID,
+            'text': message,
+            'parse_mode': 'Markdown'
+        }
+        response = requests.post(url, json=payload, timeout=10)
+        response.raise_for_status()
+        logger.info(f"✅ Telegram alert sent: {symbol} @ ${current_price:.2f}")
+        return True
+    except Exception as e:
+        logger.error(f"Error sending Telegram alert: {e}")
+        return False
+
+
+# ─── Market Hours ─────────────────────────────────────────────────────────────
+
+def is_market_open():
+    try:
+        est = pytz.timezone('US/Eastern')
+        now = datetime.now(est)
+        if now.weekday() >= 5:  # Saturday or Sunday
+            return False
+        market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        return market_open <= now <= market_close
+    except Exception:
+        return True  # Default to True if timezone check fails
+
+
+# ─── Background Monitor Thread ────────────────────────────────────────────────
+
+def monitor_loop():
+    """Background thread: checks prices every POLLING_INTERVAL seconds"""
+    global _last_alert_prices
+    logger.info(f"🚀 Background monitor started (interval: {POLLING_INTERVAL}s)")
+
+    # Wait for Flask to start
+    time.sleep(10)
+
+    while True:
+        try:
+            if not is_market_open():
+                logger.debug("Market closed, skipping check")
+                time.sleep(POLLING_INTERVAL)
+                continue
+
+            alerts, history = load_alerts()
+            logger.info(f"🔍 Checking {len(alerts)} stocks...")
+
+            for alert in alerts:
+                if not alert.get('active', True):
+                    continue
+
+                symbol = alert['symbol']
+                buy_price = alert['buy_price']
+                company_name = alert.get('company_name', symbol)
+
+                price_data = get_stock_price(symbol)
+                if not price_data:
+                    continue
+
+                current_price = price_data['price']
+                logger.info(f"  {symbol}: ${current_price:.2f} (target: ${buy_price:.2f})")
+
+                if current_price <= buy_price:
+                    last_price = _last_alert_prices.get(symbol)
+                    # Only alert if first time or price changed by more than $0.50
+                    if last_price is None or abs(current_price - last_price) > 0.50:
+                        success = send_telegram_alert(symbol, current_price, buy_price, company_name)
+                        if success:
+                            _last_alert_prices[symbol] = current_price
+                            msg = f"🔔 {symbol} ถึงราคาซื้อ ${current_price:.2f} (เป้า: ${buy_price:.2f})"
+                            history = add_to_history(history, symbol, current_price, buy_price, msg)
+                            save_alerts(alerts, history)
+                else:
+                    # Reset last alert price when price goes back above target
+                    if symbol in _last_alert_prices:
+                        del _last_alert_prices[symbol]
+
+                time.sleep(1)  # Small delay between API calls to avoid rate limit
+
+        except Exception as e:
+            logger.error(f"Error in monitor loop: {e}")
+
+        time.sleep(POLLING_INTERVAL)
+
+
+# ─── Flask Routes ─────────────────────────────────────────────────────────────
+
 @app.route('/')
 def index():
-    """Main dashboard page"""
     alerts, history = load_alerts()
-    
-    # Get current prices for all stocks
     enriched_alerts = []
     for alert in alerts:
         alert_copy = alert.copy()
@@ -163,15 +253,12 @@ def index():
                 alert_copy['distance_pct'] = 0
                 alert_copy['status'] = 'error'
         enriched_alerts.append(alert_copy)
-    
     return render_template('dashboard.html', alerts=enriched_alerts, history=history[-20:])
 
 
 @app.route('/api/alerts', methods=['GET'])
 def get_alerts():
-    """API endpoint to get all alerts"""
     alerts, _ = load_alerts()
-    
     result = []
     for alert in alerts:
         alert_copy = alert.copy()
@@ -179,23 +266,17 @@ def get_alerts():
         if price_data:
             alert_copy['current_price'] = price_data['price']
         result.append(alert_copy)
-    
     return jsonify(result)
 
 
 @app.route('/api/alerts', methods=['POST'])
 def add_alert():
-    """API endpoint to add new alert"""
     try:
         data = request.json
         alerts, history = load_alerts()
-        
         symbol = data['symbol'].upper().strip()
-        
-        # Check if symbol already exists
         if any(a['symbol'] == symbol for a in alerts):
             return jsonify({'error': 'Symbol already exists'}), 400
-        
         new_alert = {
             'symbol': symbol,
             'company_name': data.get('company_name', symbol),
@@ -203,22 +284,18 @@ def add_alert():
             'created_date': datetime.now().strftime('%Y-%m-%d'),
             'active': True
         }
-        
         alerts.append(new_alert)
         save_alerts(alerts, history)
         return jsonify(new_alert), 201
     except Exception as e:
-        logger.error(f"Error adding alert: {e}")
         return jsonify({'error': str(e)}), 400
 
 
 @app.route('/api/alerts/<symbol>', methods=['PUT'])
 def update_alert(symbol):
-    """API endpoint to update alert"""
     try:
         data = request.json
         alerts, history = load_alerts()
-        
         for alert in alerts:
             if alert['symbol'] == symbol.upper():
                 if 'buy_price' in data:
@@ -227,93 +304,82 @@ def update_alert(symbol):
                     alert['active'] = data['active']
                 if 'company_name' in data:
                     alert['company_name'] = data['company_name']
-                
                 save_alerts(alerts, history)
                 return jsonify(alert), 200
-        
         return jsonify({'error': 'Symbol not found'}), 404
     except Exception as e:
-        logger.error(f"Error updating alert: {e}")
         return jsonify({'error': str(e)}), 400
 
 
 @app.route('/api/alerts/<symbol>', methods=['DELETE'])
 def delete_alert(symbol):
-    """API endpoint to delete alert"""
     try:
         alerts, history = load_alerts()
         original_count = len(alerts)
         alerts = [a for a in alerts if a['symbol'] != symbol.upper()]
-        
         if len(alerts) == original_count:
             return jsonify({'error': 'Symbol not found'}), 404
-        
         save_alerts(alerts, history)
         return jsonify({'message': f'Alert for {symbol.upper()} deleted'}), 200
     except Exception as e:
-        logger.error(f"Error deleting alert: {e}")
         return jsonify({'error': str(e)}), 400
 
 
 @app.route('/api/price/<symbol>', methods=['GET'])
 def get_price(symbol):
-    """API endpoint to get current price for a symbol"""
     try:
         price_data = get_stock_price(symbol.upper())
         if price_data:
             return jsonify(price_data), 200
-        else:
-            return jsonify({'error': 'Failed to fetch price or market closed'}), 400
+        return jsonify({'error': 'Failed to fetch price'}), 400
     except Exception as e:
-        logger.error(f"Error getting price: {e}")
         return jsonify({'error': str(e)}), 400
 
 
 @app.route('/api/history', methods=['GET'])
 def get_history():
-    """API endpoint to get alert history"""
     _, history = load_alerts()
     return jsonify(history[-50:])
 
 
-@app.route('/api/check', methods=['POST'])
-def check_alerts():
-    """Manually trigger alert check"""
+@app.route('/api/test-telegram', methods=['POST'])
+def test_telegram():
+    """Test Telegram connection"""
     try:
-        alerts, history = load_alerts()
-        triggered = []
-        
-        for alert in alerts:
-            if not alert.get('active', True):
-                continue
-            
-            price_data = get_stock_price(alert['symbol'])
-            if price_data and price_data['price'] <= alert['buy_price']:
-                msg = f"🔔 BUY ALERT: {alert['symbol']} is at ${price_data['price']:.2f} (target: ${alert['buy_price']:.2f})"
-                triggered.append({
-                    'symbol': alert['symbol'],
-                    'current_price': price_data['price'],
-                    'buy_price': alert['buy_price'],
-                    'message': msg
-                })
-                history = add_to_history(history, alert['symbol'], price_data['price'], alert['buy_price'], msg)
-        
-        save_alerts(alerts, history)
-        return jsonify({'triggered': triggered, 'count': len(triggered)}), 200
+        now_thai = datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%d/%m/%Y %H:%M')
+        message = (
+            f"✅ *Stock Alert System - Test*\n\n"
+            f"ระบบ Price Alert ทำงานปกติ\n"
+            f"🕐 เวลา: {now_thai} (TH)\n\n"
+            f"คุณจะได้รับ alert เมื่อราคาหุ้นถึงเป้าหมาย!"
+        )
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {'chat_id': TELEGRAM_CHAT_ID, 'text': message, 'parse_mode': 'Markdown'}
+        response = requests.post(url, json=payload, timeout=10)
+        response.raise_for_status()
+        return jsonify({'success': True, 'message': 'Test message sent to Telegram!'}), 200
     except Exception as e:
-        logger.error(f"Error checking alerts: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@app.route('/api/market-status', methods=['GET'])
+def market_status():
+    return jsonify({
+        'is_open': is_market_open(),
+        'timestamp': datetime.now().isoformat()
+    })
 
 
 @app.route('/health', methods=['GET'])
 def health():
-    """Health check endpoint - also keeps service alive"""
     alerts, _ = load_alerts()
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat(),
         'alerts_count': len(alerts),
-        'finnhub_configured': bool(FINNHUB_API_KEY)
+        'market_open': is_market_open(),
+        'finnhub_configured': bool(FINNHUB_API_KEY),
+        'telegram_configured': bool(TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)
     }), 200
 
 
@@ -325,6 +391,20 @@ def not_found(error):
 @app.errorhandler(500)
 def server_error(error):
     return jsonify({'error': 'Internal server error'}), 500
+
+
+# ─── Start Background Monitor ─────────────────────────────────────────────────
+
+def start_background_monitor():
+    """Start the background monitoring thread"""
+    monitor_thread = Thread(target=monitor_loop, daemon=True)
+    monitor_thread.start()
+    logger.info("✅ Background monitor thread started")
+
+
+# Start monitor when app loads (not in debug reloader child process)
+if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+    start_background_monitor()
 
 
 if __name__ == '__main__':
