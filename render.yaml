@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: stock-alert-dashboard
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+    routes:
+      - path: /
+        matchType: prefix
+
+  - type: background
+    name: stock-alert-monitor
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python stock_alert_monitor.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

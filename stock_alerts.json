@@ -1,0 +1,82 @@
+{
+  "alerts": [
+    {
+      "symbol": "RKLB",
+      "company_name": "Rocket Lab USA Inc.",
+      "buy_price": 100.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "CEG",
+      "company_name": "Constellation Energy Corporation",
+      "buy_price": 220.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "PLTR",
+      "company_name": "Palantir Technologies Inc.",
+      "buy_price": 126.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "ETN",
+      "company_name": "Eaton PLC",
+      "buy_price": 363.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "AMZN",
+      "company_name": "Amazon.com Inc.",
+      "buy_price": 215.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "INTC",
+      "company_name": "Intel Corporation",
+      "buy_price": 90.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "TSM",
+      "company_name": "Taiwan Semiconductor Manufacturing Company Limited",
+      "buy_price": 380.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "ASTS",
+      "company_name": "AST SpaceMobile Inc.",
+      "buy_price": 70.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "MSFT",
+      "company_name": "Microsoft Corporation",
+      "buy_price": 380.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "META",
+      "company_name": "Meta Platforms Inc.",
+      "buy_price": 540.0,
+      "created_date": "2024-01-15",
+      "active": true
+    },
+    {
+      "symbol": "V",
+      "company_name": "Visa Inc.",
+      "buy_price": 300.0,
+      "created_date": "2024-01-15",
+      "active": true
+    }
+  ],
+  "alert_history": []
+}

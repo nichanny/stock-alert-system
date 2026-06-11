@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Alert Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        
+        .alert-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .alert-info {
+            flex: 1;
+        }
+        
+        .alert-symbol {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .alert-prices {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .alert-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .status-below {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-above {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .alert-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #5568d3;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-symbol {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .history-time {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-save {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #218838;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .alert-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .alert-actions {
+                width: 100%;
+                margin-top: 10px;
+            }
+            
+            .btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Stock Price Alert Dashboard</h1>
+            <p>Real-time stock price monitoring with Telegram alerts</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Alerts Section -->
+            <div class="card">
+                <h2>Active Alerts</h2>
+                <button class="btn-add" onclick="openAddModal()">+ Add New Alert</button>
+                
+                <div id="alerts-container">
+                    <!-- Alerts will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div>
+                <!-- Statistics -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2>Statistics</h2>
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-number" id="total-alerts">0</div>
+                            <div class="stat-label">Total Alerts</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="below-target">0</div>
+                            <div class="stat-label">Below Target</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent History -->
+                <div class="card">
+                    <h2>Recent Alerts</h2>
+                    <div id="history-container">
+                        <!-- History will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Modal -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2 id="modalTitle">Add New Alert</h2>
+            </div>
+            <form id="alertForm">
+                <div class="form-group">
+                    <label for="symbol">Stock Symbol</label>
+                    <input type="text" id="symbol" name="symbol" placeholder="e.g., AAPL" required>
+                </div>
+                <div class="form-group">
+                    <label for="company_name">Company Name (Optional)</label>
+                    <input type="text" id="company_name" name="company_name" placeholder="e.g., Apple Inc.">
+                </div>
+                <div class="form-group">
+                    <label for="buy_price">Buy Price Target ($)</label>
+                    <input type="number" id="buy_price" name="buy_price" step="0.01" placeholder="e.g., 150.00" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save">Save</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let currentEditSymbol = null;
+        
+        // Load alerts on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAlerts();
+            loadHistory();
+            setInterval(loadAlerts, 30000); // Refresh every 30 seconds
+        });
+        
+        function loadAlerts() {
+            fetch('/api/alerts')
+                .then(response => response.json())
+                .then(alerts => {
+                    const container = document.getElementById('alerts-container');
+                    
+                    if (alerts.length === 0) {
+                        container.innerHTML = '<div class="empty-state"><p>No alerts yet. Add one to get started!</p></div>';
+                        document.getElementById('total-alerts').textContent = '0';
+                        document.getElementById('below-target').textContent = '0';
+                        return;
+                    }
+                    
+                    let html = '';
+                    let belowTarget = 0;
+                    
+                    alerts.forEach(alert => {
+                        const currentPrice = alert.current_price || 'N/A';
+                        const status = alert.status || 'unknown';
+                        let statusClass = 'status-above';
+                        let statusText = 'Above Target';
+                        
+                        if (status === 'below_target') {
+                            statusClass = 'status-below';
+                            statusText = '🔔 Below Target';
+                            belowTarget++;
+                        } else if (status === 'error') {
+                            statusClass = 'status-error';
+                            statusText = 'Error';
+                        }
+                        
+                        html += `
+                            <div class="alert-item">
+                                <div class="alert-info">
+                                    <div class="alert-symbol">${alert.symbol}</div>
+                                    <div class="alert-prices">
+                                        Current: $${typeof currentPrice === 'number' ? currentPrice.toFixed(2) : currentPrice} | 
+                                        Target: $${alert.buy_price.toFixed(2)}
+                                    </div>
+                                </div>
+                                <div class="alert-status ${statusClass}">${statusText}</div>
+                                <div class="alert-actions">
+                                    <button class="btn btn-edit" onclick="openEditModal('${alert.symbol}', ${alert.buy_price})">Edit</button>
+                                    <button class="btn btn-delete" onclick="deleteAlert('${alert.symbol}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                    document.getElementById('total-alerts').textContent = alerts.length;
+                    document.getElementById('below-target').textContent = belowTarget;
+                })
+                .catch(error => console.error('Error loading alerts:', error));
+        }
+        
+        function loadHistory() {
+            fetch('/api/history')
+                .then(response => response.json())
+                .then(history => {
+                    const container = document.getElementById('history-container');
+                    
+                    if (history.length === 0) {
+                        container.innerHTML = '<div class="empty-state"><p>No alert history yet</p></div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    history.reverse().forEach(item => {
+                        const time = new Date(item.timestamp).toLocaleString();
+                        html += `
+                            <div class="history-item">
+                                <span class="history-symbol">${item.symbol}</span> reached $${item.current_price.toFixed(2)}
+                                <br>
+                                <span class="history-time">${time}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                })
+                .catch(error => console.error('Error loading history:', error));
+        }
+        
+        function openAddModal() {
+            currentEditSymbol = null;
+            document.getElementById('modalTitle').textContent = 'Add New Alert';
+            document.getElementById('alertForm').reset();
+            document.getElementById('symbol').disabled = false;
+            document.getElementById('alertModal').style.display = 'block';
+        }
+        
+        function openEditModal(symbol, buyPrice) {
+            currentEditSymbol = symbol;
+            document.getElementById('modalTitle').textContent = 'Edit Alert';
+            document.getElementById('symbol').value = symbol;
+            document.getElementById('symbol').disabled = true;
+            document.getElementById('buy_price').value = buyPrice;
+            document.getElementById('alertModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('alertModal').style.display = 'none';
+            currentEditSymbol = null;
+        }
+        
+        document.getElementById('alertForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const symbol = document.getElementById('symbol').value.toUpperCase();
+            const company_name = document.getElementById('company_name').value;
+            const buy_price = parseFloat(document.getElementById('buy_price').value);
+            
+            if (currentEditSymbol) {
+                // Update existing alert
+                fetch(`/api/alerts/${symbol}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        buy_price: buy_price
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        closeModal();
+                        loadAlerts();
+                    }
+                })
+                .catch(error => console.error('Error updating alert:', error));
+            } else {
+                // Add new alert
+                fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        company_name: company_name,
+                        buy_price: buy_price
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        closeModal();
+                        loadAlerts();
+                    }
+                })
+                .catch(error => console.error('Error adding alert:', error));
+            }
+        });
+        
+        function deleteAlert(symbol) {
+            if (confirm(`Are you sure you want to delete alert for ${symbol}?`)) {
+                fetch(`/api/alerts/${symbol}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                    } else {
+                        loadAlerts();
+                    }
+                })
+                .catch(error => console.error('Error deleting alert:', error));
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('alertModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
