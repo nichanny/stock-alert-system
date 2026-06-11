@@ -7,8 +7,8 @@
 ## 📋 ข้อมูลที่คุณเตรียมไว้
 
 ✅ **Finnhub API Key**: (ได้แล้ว)
-✅ **Telegram Bot Token**: `8560558397:AAF8VNA8WvjNwbZXadbx6lZec0171IScuw4`
-✅ **Telegram Chat ID**: `8472135977`
+✅ **Telegram Bot Token**: (ได้แล้ว - เก็บไว้ใน Render Environment Variables)
+✅ **Telegram Chat ID**: (ได้แล้ว - เก็บไว้ใน Render Environment Variables)
 
 ---
 
@@ -66,8 +66,8 @@ git push -u origin main
 
 ```
 FINNHUB_API_KEY = your_finnhub_api_key_here
-TELEGRAM_BOT_TOKEN = 8560558397:AAF8VNA8WvjNwbZXadbx6lZec0171IScuw4
-TELEGRAM_CHAT_ID = 8472135977
+TELEGRAM_BOT_TOKEN = your_telegram_bot_token_here
+TELEGRAM_CHAT_ID = your_telegram_chat_id_here
 FLASK_SECRET_KEY = (ให้ Render generate)
 POLLING_INTERVAL = 60
 ```
@@ -101,8 +101,8 @@ POLLING_INTERVAL = 60
 
 ```
 FINNHUB_API_KEY = your_finnhub_api_key_here
-TELEGRAM_BOT_TOKEN = 8560558397:AAF8VNA8WvjNwbZXadbx6lZec0171IScuw4
-TELEGRAM_CHAT_ID = 8472135977
+TELEGRAM_BOT_TOKEN = your_telegram_bot_token_here
+TELEGRAM_CHAT_ID = your_telegram_chat_id_here
 POLLING_INTERVAL = 60
 CHECK_MARKET_HOURS_ONLY = true
 ```
