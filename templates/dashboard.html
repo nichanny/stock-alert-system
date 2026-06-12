@@ -4,155 +4,368 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Stock Alert</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:rgba(255,255,255,.08);
-  --text:#e8eaf0;--muted:#7c8099;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
-  --core:#3b82f6;--growth:#22c55e;--defensive:#f59e0b;--spec:#ef4444;
-  --radius:14px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,.4);
-  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)
+  /* ── Cream Light Theme ── */
+  --bg:#f5f0e8;
+  --surface:#fffdf8;
+  --surface2:#f0ebe0;
+  --border:rgba(160,140,110,.18);
+  --border-strong:rgba(160,140,110,.35);
+  --text:#2d2416;
+  --muted:#8a7a62;
+  --shadow:0 2px 16px rgba(120,100,60,.10);
+  --shadow-md:0 4px 24px rgba(120,100,60,.14);
+
+  /* Status */
+  --green:#1a9e52;--red:#d63b3b;--yellow:#c47d0a;--blue:#2563eb;
+  --green-bg:rgba(26,158,82,.10);--red-bg:rgba(214,59,59,.09);
+  --yellow-bg:rgba(196,125,10,.10);--blue-bg:rgba(37,99,235,.10);
+
+  /* Category */
+  --core:#2563eb;--growth:#1a9e52;--defensive:#c47d0a;--spec:#d63b3b;
+
+  --radius:16px;--radius-sm:10px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px)
 }
 html{font-size:16px}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
-  min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bot) + 80px);
-  -webkit-font-smoothing:antialiased}
-.topbar{position:sticky;top:0;z-index:100;background:rgba(15,17,23,.92);backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 16px;
-  display:flex;align-items:center;gap:10px}
-.topbar-title{font-size:17px;font-weight:700;letter-spacing:-.3px;flex:1}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  min-height:100dvh;
+  padding-top:var(--safe-top);
+  padding-bottom:calc(var(--safe-bot) + 80px);
+  -webkit-font-smoothing:antialiased
+}
+
+/* ── Topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(245,240,232,.94);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border-strong);
+  padding:12px 16px;
+  display:flex;align-items:center;gap:10px
+}
+.topbar-title{font-size:17px;font-weight:800;letter-spacing:-.4px;flex:1;color:var(--text)}
 .topbar-title span{color:var(--blue)}
-.market-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
-  padding:4px 10px;border-radius:20px;letter-spacing:.3px}
-.market-badge.open{background:rgba(34,197,94,.15);color:var(--green)}
-.market-badge.close{background:rgba(239,68,68,.12);color:var(--red)}
+.market-badge{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:20px;letter-spacing:.3px
+}
+.market-badge.open{background:var(--green-bg);color:var(--green)}
+.market-badge.close{background:var(--red-bg);color:var(--red)}
 .market-dot{width:7px;height:7px;border-radius:50%}
 .market-badge.open .market-dot{background:var(--green);animation:pulse 2s infinite}
 .market-badge.close .market-dot{background:var(--red)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);
-  width:34px;height:34px;border-radius:var(--radius-sm);cursor:pointer;font-size:15px;
-  display:flex;align-items:center;justify-content:center;transition:background .2s}
-.refresh-btn:hover{background:var(--surface)}
-.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px 0}
-.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:10px 12px;text-align:center;cursor:pointer}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.refresh-btn{
+  background:var(--surface2);border:1px solid var(--border-strong);
+  color:var(--muted);width:34px;height:34px;border-radius:var(--radius-sm);
+  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:background .2s
+}
+.refresh-btn:hover{background:var(--border)}
+
+/* ── Summary Strip ── */
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 16px 0}
+.sum-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 12px;
+  text-align:center;cursor:pointer;transition:box-shadow .2s
+}
+.sum-card:hover{box-shadow:var(--shadow)}
 .sum-val{font-size:22px;font-weight:800;line-height:1}
 .sum-lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
-.sum-card.hit .sum-val{color:var(--red)}.sum-card.near .sum-val{color:var(--yellow)}
-.sum-card.waiting .sum-val{color:var(--muted)}.sum-card.total .sum-val{color:var(--text)}
+.sum-card.hit .sum-val{color:var(--red)}
+.sum-card.near .sum-val{color:var(--yellow)}
+.sum-card.waiting .sum-val{color:var(--muted)}
+.sum-card.total .sum-val{color:var(--text)}
+
+/* ── Filter Bar ── */
 .filter-bar{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none}
 .filter-bar::-webkit-scrollbar{display:none}
-.ftab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;
-  border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;
-  transition:all .2s;white-space:nowrap}
+.ftab{
+  flex-shrink:0;padding:6px 14px;border-radius:20px;
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--muted);
+  cursor:pointer;transition:all .2s;white-space:nowrap
+}
 .ftab.active,.ftab:hover{background:var(--blue);border-color:var(--blue);color:#fff}
 .ftab[data-cat="core"].active{background:var(--core);border-color:var(--core)}
 .ftab[data-cat="growth"].active{background:var(--growth);border-color:var(--growth)}
 .ftab[data-cat="defensive"].active{background:var(--defensive);border-color:var(--defensive)}
 .ftab[data-cat="spec"].active{background:var(--spec);border-color:var(--spec)}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:12px 16px}
-.alert-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:14px;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
-.alert-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--cat-color,var(--blue))}
-.alert-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
-.alert-card.status-hit{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
-.alert-card.status-near{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)}
+
+/* ── Cards Grid ── */
+.cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:12px;padding:12px 16px
+}
+.alert-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  transition:transform .15s,box-shadow .15s;
+  position:relative;overflow:hidden
+}
+.alert-card::before{
+  content:'';position:absolute;top:0;left:0;
+  width:4px;height:100%;
+  background:var(--cat-color,var(--blue))
+}
+.alert-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.alert-card.status-hit{
+  border-color:rgba(214,59,59,.35);
+  background:linear-gradient(135deg,rgba(214,59,59,.04) 0%,var(--surface) 60%)
+}
+.alert-card.status-near{
+  border-color:rgba(196,125,10,.3);
+  background:linear-gradient(135deg,rgba(196,125,10,.04) 0%,var(--surface) 60%)
+}
+
+/* Card Header */
 .card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
 .card-left{flex:1;min-width:0}
-.card-ticker{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.card-ticker{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--text)}
 .card-name{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-right{text-align:right;flex-shrink:0}
-.card-price{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.card-price{font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text)}
 .card-change{font-size:11px;font-weight:600;margin-top:2px}
 .card-change.pos{color:var(--green)}.card-change.neg{color:var(--red)}.card-change.neu{color:var(--muted)}
-.cat-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-  padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.3px}
+
+/* Edit button on card */
+.card-edit-btn{
+  position:absolute;top:10px;right:10px;
+  background:var(--surface2);border:1px solid var(--border-strong);
+  color:var(--muted);font-size:11px;font-weight:600;
+  padding:3px 8px;border-radius:8px;cursor:pointer;
+  transition:all .2s;z-index:2
+}
+.card-edit-btn:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* Category Badge */
+.cat-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.3px
+}
+
+/* Levels */
 .levels-section{margin-top:4px}
 .levels-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .level-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
 .level-idx{font-size:10px;color:var(--muted);width:16px;flex-shrink:0;text-align:center}
 .level-bar-wrap{flex:1;height:22px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
 .level-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;min-width:2px}
-.level-bar-text{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-size:11px;font-weight:700;
-  color:#fff;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.level-bar-dist{position:absolute;top:50%;right:8px;transform:translateY(-50%);font-size:10px;
-  font-weight:600;color:rgba(255,255,255,.7)}
-.level-bar-fill.hit{background:linear-gradient(90deg,#ef4444,#f87171)}
-.level-bar-fill.near{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
-.level-bar-fill.waiting{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
-.level-size-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;white-space:nowrap}
-.size-small{background:rgba(245,158,11,.15);color:#fbbf24}
-.size-mid{background:rgba(249,115,22,.15);color:#fb923c}
-.size-big{background:rgba(239,68,68,.15);color:#f87171}
-.triggered-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;
-  background:rgba(34,197,94,.15);color:var(--green);flex-shrink:0}
-.cooldown-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;
-  background:rgba(124,128,153,.15);color:var(--muted);flex-shrink:0}
-.card-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;
-  border-top:1px solid var(--border);padding-top:8px}
+.level-bar-text{
+  position:absolute;top:50%;left:8px;transform:translateY(-50%);
+  font-size:11px;font-weight:700;color:#fff;
+  white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.25)
+}
+.level-bar-dist{
+  position:absolute;top:50%;right:8px;transform:translateY(-50%);
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.85)
+}
+.level-bar-fill.hit{background:linear-gradient(90deg,#d63b3b,#e87070)}
+.level-bar-fill.near{background:linear-gradient(90deg,#c47d0a,#e0a030)}
+.level-bar-fill.waiting{background:linear-gradient(90deg,#2563eb,#5b8ef5)}
+
+.level-size-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;
+  border-radius:10px;flex-shrink:0;white-space:nowrap
+}
+.size-small{background:rgba(196,125,10,.12);color:var(--yellow)}
+.size-mid{background:rgba(249,115,22,.12);color:#c2590a}
+.size-big{background:rgba(214,59,59,.12);color:var(--red)}
+.triggered-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:var(--green-bg);color:var(--green);flex-shrink:0}
+.cooldown-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;background:rgba(138,122,98,.12);color:var(--muted);flex-shrink:0}
+
+.card-note{
+  font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;
+  border-top:1px solid var(--border);padding-top:8px
+}
 .no-price{font-size:13px;color:var(--muted);text-align:center;padding:12px 0}
-.bottom-tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,.95);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);
-  display:flex;padding-bottom:var(--safe-bot)}
-.btab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:8px 4px;cursor:pointer;color:var(--muted);font-size:10px;gap:2px;transition:color .2s;
-  border:none;background:none;-webkit-tap-highlight-color:transparent}
+
+/* ── Inline Edit Panel (inside card) ── */
+.edit-panel{
+  display:none;
+  margin-top:10px;
+  background:var(--surface2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);
+  padding:12px
+}
+.edit-panel.open{display:block}
+.edit-panel-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.edit-levels-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.edit-level-row{display:flex;align-items:center;gap:6px}
+.edit-level-label{font-size:11px;color:var(--muted);width:40px;flex-shrink:0}
+.edit-level-input{
+  flex:1;background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:6px;color:var(--text);font-size:13px;font-weight:600;
+  padding:6px 10px;outline:none;transition:border-color .2s;
+  -webkit-appearance:none
+}
+.edit-level-input:focus{border-color:var(--blue)}
+.edit-size-select{
+  background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:6px;color:var(--text);font-size:12px;
+  padding:6px 8px;outline:none;-webkit-appearance:none;
+  cursor:pointer
+}
+.edit-remove-btn{
+  background:none;border:none;color:var(--red);
+  font-size:14px;cursor:pointer;padding:4px;
+  border-radius:6px;transition:background .2s;flex-shrink:0
+}
+.edit-remove-btn:hover{background:var(--red-bg)}
+.edit-add-level-btn{
+  background:none;border:1px dashed var(--border-strong);
+  color:var(--muted);font-size:12px;font-weight:600;
+  padding:6px;border-radius:6px;cursor:pointer;
+  width:100%;transition:all .2s;margin-bottom:8px
+}
+.edit-add-level-btn:hover{border-color:var(--blue);color:var(--blue)}
+.edit-actions{display:flex;gap:6px}
+.edit-save-btn{
+  flex:1;background:var(--blue);color:#fff;border:none;
+  border-radius:6px;font-size:13px;font-weight:700;
+  padding:8px;cursor:pointer;transition:opacity .2s
+}
+.edit-save-btn:hover{opacity:.85}
+.edit-cancel-btn{
+  background:var(--surface);border:1px solid var(--border-strong);
+  color:var(--muted);border-radius:6px;font-size:13px;font-weight:600;
+  padding:8px 14px;cursor:pointer;transition:background .2s
+}
+.edit-cancel-btn:hover{background:var(--border)}
+
+/* ── Bottom Tabs ── */
+.bottom-tabs{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(245,240,232,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--border-strong);
+  display:flex;padding-bottom:var(--safe-bot)
+}
+.btab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 4px;cursor:pointer;color:var(--muted);font-size:10px;gap:2px;
+  transition:color .2s;border:none;background:none;
+  -webkit-tap-highlight-color:transparent
+}
 .btab .btab-icon{font-size:20px}
 .btab.active{color:var(--blue)}
+
+/* ── Panels ── */
 .panel{display:none;padding:12px 16px}
 .panel.active{display:block}
-.history-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-.hist-ticker{font-size:14px;font-weight:800;min-width:52px}
+
+/* History */
+.history-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:10px 12px;
+  margin-bottom:8px;display:flex;align-items:center;gap:10px
+}
+.hist-ticker{font-size:14px;font-weight:800;min-width:52px;color:var(--text)}
 .hist-detail{flex:1;min-width:0}
 .hist-msg{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hist-time{font-size:10px;color:var(--muted);margin-top:2px}
 .hist-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
-.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:16px;margin-bottom:12px}
-.form-title{font-size:15px;font-weight:700;margin-bottom:12px}
+
+/* Add Form */
+.add-form{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:12px
+}
+.form-title{font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .form-row.full{grid-template-columns:1fr}
-.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-size:14px;padding:10px 12px;width:100%;outline:none;transition:border-color .2s;
-  -webkit-appearance:none}
+.form-input{
+  background:var(--surface2);border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);color:var(--text);font-size:14px;
+  padding:10px 12px;width:100%;outline:none;transition:border-color .2s;
+  -webkit-appearance:none
+}
 .form-input:focus{border-color:var(--blue)}
 .form-input::placeholder{color:var(--muted)}
-.form-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-size:14px;padding:10px 12px;width:100%;outline:none;-webkit-appearance:none}
+.form-select{
+  background:var(--surface2);border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);color:var(--text);font-size:14px;
+  padding:10px 12px;width:100%;outline:none;-webkit-appearance:none
+}
 .form-hint{font-size:11px;color:var(--muted);margin-top:4px}
-.btn-primary{background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);
-  font-size:14px;font-weight:700;padding:11px 20px;cursor:pointer;width:100%;transition:opacity .2s;
-  -webkit-tap-highlight-color:transparent}
+.btn-primary{
+  background:var(--blue);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-size:14px;font-weight:700;
+  padding:11px 20px;cursor:pointer;width:100%;transition:opacity .2s;
+  -webkit-tap-highlight-color:transparent
+}
 .btn-primary:hover{opacity:.85}
-.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);
-  border-radius:var(--radius-sm);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;transition:background .2s}
-.btn-danger:hover{background:rgba(239,68,68,.25)}
-.settings-row{display:flex;align-items:center;justify-content:space-between;
-  padding:12px 0;border-bottom:1px solid var(--border)}
+.btn-danger{
+  background:var(--red-bg);color:var(--red);
+  border:1px solid rgba(214,59,59,.3);
+  border-radius:var(--radius-sm);font-size:12px;font-weight:600;
+  padding:6px 12px;cursor:pointer;transition:background .2s
+}
+.btn-danger:hover{background:rgba(214,59,59,.18)}
+
+/* Settings */
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid var(--border)
+}
 .settings-row:last-child{border-bottom:none}
-.settings-label{font-size:14px}
+.settings-label{font-size:14px;color:var(--text)}
 .settings-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);
-  border-radius:var(--radius-sm);font-size:13px;font-weight:600;padding:8px 16px;cursor:pointer;transition:background .2s}
-.btn-secondary:hover{background:var(--surface)}
+.btn-secondary{
+  background:var(--surface2);color:var(--text);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);font-size:13px;font-weight:600;
+  padding:8px 16px;cursor:pointer;transition:background .2s
+}
+.btn-secondary:hover{background:var(--border)}
+
+/* Empty State */
 .empty-state{text-align:center;padding:48px 16px;color:var(--muted)}
 .empty-icon{font-size:48px;margin-bottom:12px}
 .empty-text{font-size:15px;font-weight:600}
 .empty-sub{font-size:13px;margin-top:4px}
-#toast{position:fixed;bottom:calc(var(--safe-bot) + 80px);left:50%;transform:translateX(-50%);
-  background:rgba(30,34,50,.96);border:1px solid var(--border);border-radius:20px;padding:10px 20px;
-  font-size:13px;font-weight:600;color:var(--text);z-index:999;opacity:0;transition:opacity .3s;
-  white-space:nowrap;backdrop-filter:blur(10px)}
+
+/* Toast */
+#toast{
+  position:fixed;bottom:calc(var(--safe-bot) + 88px);left:50%;
+  transform:translateX(-50%);
+  background:rgba(45,36,22,.92);border:1px solid var(--border-strong);
+  border-radius:20px;padding:10px 20px;
+  font-size:13px;font-weight:600;color:#fff;
+  z-index:999;opacity:0;transition:opacity .3s;
+  white-space:nowrap;backdrop-filter:blur(10px)
+}
 #toast.show{opacity:1}
+
+/* Desktop Nav */
 .desktop-nav{display:none}
-.desktop-nav .dnav-btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
-  border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;
-  transition:all .2s;white-space:nowrap}
-.desktop-nav .dnav-btn.active,.desktop-nav .dnav-btn:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.desktop-nav .dnav-btn{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  border:1px solid var(--border-strong);background:var(--surface);
+  color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap
+}
+.desktop-nav .dnav-btn.active,.desktop-nav .dnav-btn:hover{
+  background:var(--blue);border-color:var(--blue);color:#fff
+}
+
+/* ── Responsive ── */
 @media(min-width:768px){
   body{padding-bottom:0}
   .topbar{padding:14px 24px}
@@ -182,6 +395,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 </style>
 </head>
 <body>
+
+<!-- Topbar -->
 <div class="topbar">
   <div class="topbar-title">📈 <span>Stock</span> Alert</div>
   <nav class="desktop-nav" id="desktopNav">
@@ -197,8 +412,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <button class="refresh-btn" onclick="location.reload()" title="Refresh">↻</button>
 </div>
 
-{% set hit_count = alerts|selectattr('overall_status','eq','hit')|list|length %}
-{% set near_count = alerts|selectattr('overall_status','eq','near')|list|length %}
+<!-- Summary Strip -->
+{% set hit_count     = alerts|selectattr('overall_status','eq','hit')|list|length %}
+{% set near_count    = alerts|selectattr('overall_status','eq','near')|list|length %}
 {% set waiting_count = alerts|selectattr('overall_status','eq','waiting')|list|length %}
 <div class="summary-strip">
   <div class="sum-card hit"     onclick="filterCards('hit',null)"><div class="sum-val">{{ hit_count }}</div><div class="sum-lbl">🔴 ถึงแนว</div></div>
@@ -207,6 +423,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
   <div class="sum-card total"   onclick="filterCards('all',null)"><div class="sum-val">{{ alerts|length }}</div><div class="sum-lbl">ทั้งหมด</div></div>
 </div>
 
+<!-- Filter Bar -->
 <div class="filter-bar" id="filterBar">
   <button class="ftab active" data-filter="all"       onclick="filterCards('all',this)">ทั้งหมด</button>
   <button class="ftab"        data-filter="hit"       onclick="filterCards('hit',this)">🔴 ถึงแนว</button>
@@ -224,8 +441,13 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
     <div class="alert-card status-{{ a.overall_status }}"
          data-status="{{ a.overall_status }}"
          data-cat="{{ a.get('category','growth') }}"
+         data-symbol="{{ a.symbol }}"
          style="--cat-color:{{ a.category_color }}">
-      <div class="card-header">
+
+      <!-- Edit Button -->
+      <button class="card-edit-btn" onclick="toggleEdit('{{ a.symbol }}',this)">✏️ แก้ไข</button>
+
+      <div class="card-header" style="padding-right:60px">
         <div class="card-left">
           <div class="card-ticker">{{ a.symbol }}</div>
           <div class="card-name">{{ a.company_name }}</div>
@@ -241,7 +463,9 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
           {% endif %}
         </div>
       </div>
-      <div class="cat-badge" style="background:{{ a.category_color }}22;color:{{ a.category_color }}">{{ a.category_label }}</div>
+
+      <div class="cat-badge" style="background:{{ a.category_color }}18;color:{{ a.category_color }}">{{ a.category_label }}</div>
+
       {% if a.level_statuses %}
       <div class="levels-section">
         <div class="levels-label">แนวซื้อ {{ a.level_statuses|length }} ระดับ</div>
@@ -271,7 +495,35 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       {% else %}
         <div class="no-price">ไม่สามารถดึงราคาได้</div>
       {% endif %}
+
       {% if a.note %}<div class="card-note">{{ a.note }}</div>{% endif %}
+
+      <!-- Inline Edit Panel -->
+      <div class="edit-panel" id="edit-{{ a.symbol }}">
+        <div class="edit-panel-title">✏️ แก้ไขแนวรับ — {{ a.symbol }}</div>
+        <div class="edit-levels-wrap" id="edit-rows-{{ a.symbol }}">
+          {% for ls in a.level_statuses %}
+          <div class="edit-level-row">
+            <span class="edit-level-label">ไม้ {{ ls.idx + 1 }}</span>
+            <input class="edit-level-input" type="number" step="0.01"
+                   value="{{ "%.2f"|format(ls.level) }}"
+                   placeholder="ราคา">
+            <select class="edit-size-select">
+              <option value="small" {% if ls.size == 'small' %}selected{% endif %}>เล็ก</option>
+              <option value="mid"   {% if ls.size == 'mid'   %}selected{% endif %}>กลาง</option>
+              <option value="big"   {% if ls.size == 'big'   %}selected{% endif %}>หนัก</option>
+            </select>
+            <button class="edit-remove-btn" onclick="removeEditRow(this)" title="ลบแนวนี้">✕</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button class="edit-add-level-btn" onclick="addEditRow('{{ a.symbol }}')">+ เพิ่มแนวรับ</button>
+        <div class="edit-actions">
+          <button class="edit-cancel-btn" onclick="toggleEdit('{{ a.symbol }}',null)">ยกเลิก</button>
+          <button class="edit-save-btn" onclick="saveEdit('{{ a.symbol }}')">💾 บันทึก</button>
+        </div>
+      </div>
+
     </div>
     {% else %}
     <div class="empty-state" style="grid-column:1/-1">
@@ -286,7 +538,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 <!-- HISTORY PANEL -->
 <div class="panel" id="panel-history">
-  <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">📋 ประวัติ Alert</h3>
+  <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)">📋 ประวัติ Alert</h3>
   {% if history %}
     {% for h in history|reverse %}
     <div class="history-item">
@@ -296,7 +548,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
         <div class="hist-time">{{ h.timestamp }}</div>
       </div>
       {% if h.level_idx is defined %}
-      <span class="hist-badge" style="background:rgba(59,130,246,.15);color:#60a5fa">ไม้ {{ h.level_idx+1 }}/{{ h.total_levels }}</span>
+      <span class="hist-badge" style="background:var(--blue-bg);color:var(--blue)">ไม้ {{ h.level_idx+1 }}/{{ h.total_levels }}</span>
       {% endif %}
     </div>
     {% endfor %}
@@ -385,9 +637,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
       <div><div class="settings-label">Polling Interval</div><div class="settings-sub">ตรวจราคาทุก 60 วินาที</div></div>
       <span style="font-size:13px;color:var(--muted)">60s</span>
     </div>
+    <div class="settings-row">
+      <div><div class="settings-label">Price Cache TTL</div><div class="settings-sub">ใช้ราคาเดิมสูงสุด 90 วินาที (ป้องกัน rate limit)</div></div>
+      <span style="font-size:13px;color:var(--muted)">90s</span>
+    </div>
   </div>
 </div>
 
+<!-- Bottom Tabs (mobile) -->
 <div class="bottom-tabs">
   <button class="btab active" onclick="switchTab('alerts',this)"><span class="btab-icon">🔔</span>Alerts</button>
   <button class="btab" onclick="switchTab('history',this)"><span class="btab-icon">📋</span>History</button>
@@ -398,6 +655,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 <div id="toast"></div>
 
 <script>
+/* ── Tab Switching ── */
 function switchTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
@@ -407,6 +665,8 @@ function switchTab(name,btn){
   const dn=document.querySelector(`.dnav-btn[onclick*="'${name}'"]`);
   if(dn)dn.classList.add('active');
 }
+
+/* ── Filter Cards ── */
 function filterCards(filter,btn){
   if(btn){document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
   document.querySelectorAll('.alert-card').forEach(card=>{
@@ -415,6 +675,91 @@ function filterCards(filter,btn){
     card.style.display=show?'':'none';
   });
 }
+
+/* ── Inline Edit ── */
+function toggleEdit(symbol, btn){
+  const panel = document.getElementById('edit-'+symbol);
+  const isOpen = panel.classList.contains('open');
+  // Close all other edit panels first
+  document.querySelectorAll('.edit-panel.open').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.card-edit-btn').forEach(b=>{b.textContent='✏️ แก้ไข';b.style.background='';b.style.color='';});
+  if(!isOpen){
+    panel.classList.add('open');
+    if(btn){btn.textContent='✕ ปิด';btn.style.background='var(--red-bg)';btn.style.color='var(--red)';}
+    // Scroll card into view
+    panel.closest('.alert-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function addEditRow(symbol){
+  const wrap = document.getElementById('edit-rows-'+symbol);
+  const idx = wrap.querySelectorAll('.edit-level-row').length + 1;
+  const row = document.createElement('div');
+  row.className = 'edit-level-row';
+  row.innerHTML = `
+    <span class="edit-level-label">ไม้ ${idx}</span>
+    <input class="edit-level-input" type="number" step="0.01" placeholder="ราคา">
+    <select class="edit-size-select">
+      <option value="small">เล็ก</option>
+      <option value="mid" selected>กลาง</option>
+      <option value="big">หนัก</option>
+    </select>
+    <button class="edit-remove-btn" onclick="removeEditRow(this)" title="ลบแนวนี้">✕</button>
+  `;
+  wrap.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function removeEditRow(btn){
+  const row = btn.closest('.edit-level-row');
+  const wrap = row.parentElement;
+  if(wrap.querySelectorAll('.edit-level-row').length <= 1){
+    showToast('⚠️ ต้องมีแนวรับอย่างน้อย 1 ระดับ');return;
+  }
+  row.remove();
+  // Re-number labels
+  wrap.querySelectorAll('.edit-level-row').forEach((r,i)=>{
+    r.querySelector('.edit-level-label').textContent = 'ไม้ '+(i+1);
+  });
+}
+
+async function saveEdit(symbol){
+  const wrap = document.getElementById('edit-rows-'+symbol);
+  const rows = wrap.querySelectorAll('.edit-level-row');
+  const levels=[], sizes=[];
+  let valid=true;
+  rows.forEach(row=>{
+    const v = parseFloat(row.querySelector('input').value);
+    const s = row.querySelector('select').value;
+    if(isNaN(v)||v<=0){valid=false;row.querySelector('input').style.borderColor='var(--red)';}
+    else{row.querySelector('input').style.borderColor='';levels.push(v);sizes.push(s);}
+  });
+  if(!valid){showToast('⚠️ กรุณากรอกราคาให้ครบและถูกต้อง');return;}
+
+  const saveBtn = wrap.closest('.edit-panel').querySelector('.edit-save-btn');
+  saveBtn.textContent='⏳ กำลังบันทึก...';saveBtn.disabled=true;
+
+  try{
+    const res = await fetch('/api/alerts/'+symbol,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({levels,sizes})
+    });
+    const data = await res.json();
+    if(res.ok){
+      showToast('✅ บันทึก '+symbol+' สำเร็จ!');
+      setTimeout(()=>location.reload(),1000);
+    } else {
+      showToast('❌ '+(data.error||'เกิดข้อผิดพลาด'));
+      saveBtn.textContent='💾 บันทึก';saveBtn.disabled=false;
+    }
+  }catch(e){
+    showToast('❌ Network error');
+    saveBtn.textContent='💾 บันทึก';saveBtn.disabled=false;
+  }
+}
+
+/* ── Add Alert ── */
 async function addAlert(){
   const symbol=document.getElementById('inp-symbol').value.trim().toUpperCase();
   const name=document.getElementById('inp-name').value.trim();
@@ -434,6 +779,8 @@ async function addAlert(){
     else showToast('❌ '+(data.error||'เกิดข้อผิดพลาด'));
   }catch(e){showToast('❌ Network error');}
 }
+
+/* ── Delete Alert ── */
 async function deleteAlert(symbol){
   if(!confirm('ลบ '+symbol+' ออกจาก Alert?'))return;
   try{
@@ -442,6 +789,8 @@ async function deleteAlert(symbol){
     else showToast('❌ ลบไม่สำเร็จ');
   }catch(e){showToast('❌ Network error');}
 }
+
+/* ── Test Telegram ── */
 async function testTelegram(){
   showToast('📤 กำลังส่ง...');
   try{
@@ -450,11 +799,14 @@ async function testTelegram(){
     showToast(data.success?'✅ ส่ง Telegram สำเร็จ!':'❌ '+data.error);
   }catch(e){showToast('❌ Network error');}
 }
+
+/* ── Toast ── */
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);
 }
+
 {% if market_open %}setTimeout(()=>location.reload(),60000);{% endif %}
 </script>
 </body>
