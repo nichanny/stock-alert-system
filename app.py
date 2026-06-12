@@ -39,6 +39,9 @@ _history_cache = None
 _level_last_alerted: dict = {}
 # { "PLTR_30.0": True/False }  — True = triggered and still below reset threshold
 _level_triggered: dict    = {}
+# Price cache: { "PLTR": {price_data, fetched_at} } — avoids 429 on dashboard load
+_price_cache: dict = {}
+PRICE_CACHE_TTL = 90  # seconds
 
 # ─── Default Stock List (multi-level) ────────────────────────────────────────
 DEFAULT_ALERTS = [
@@ -299,7 +302,16 @@ def add_to_history(history, symbol, price, level, level_idx, total_levels, size,
 
 # ─── Stock Price ──────────────────────────────────────────────────────────────
 
-def get_stock_price(symbol):
+def get_stock_price(symbol, use_cache=True):
+    """Fetch price with in-memory cache (TTL=90s) to avoid Finnhub 429."""
+    global _price_cache
+    now = time.time()
+
+    if use_cache and symbol in _price_cache:
+        cached = _price_cache[symbol]
+        if now - cached['fetched_at'] < PRICE_CACHE_TTL:
+            return cached['data']
+
     try:
         params = {'symbol': symbol, 'token': FINNHUB_API_KEY}
         response = requests.get(FINNHUB_QUOTE_URL, params=params, timeout=10)
@@ -307,7 +319,7 @@ def get_stock_price(symbol):
         data = response.json()
         if 'c' in data and data['c'] > 0:
             pc = data.get('pc', data['c'])
-            return {
+            result = {
                 'price': data['c'],
                 'high': data.get('h', 0),
                 'low': data.get('l', 0),
@@ -316,9 +328,15 @@ def get_stock_price(symbol):
                 'change': round(data['c'] - pc, 2),
                 'change_pct': round(((data['c'] - pc) / pc) * 100, 2) if pc > 0 else 0
             }
+            _price_cache[symbol] = {'data': result, 'fetched_at': now}
+            return result
         return None
     except Exception as e:
         logger.error(f"Error fetching {symbol}: {e}")
+        # Return stale cache if available
+        if symbol in _price_cache:
+            logger.info(f"Using stale cache for {symbol}")
+            return _price_cache[symbol]['data']
         return None
 
 
@@ -439,9 +457,9 @@ def monitor_loop():
                 if not levels:
                     continue
 
-                price_data = get_stock_price(symbol)
+                price_data = get_stock_price(symbol, use_cache=False)  # always fresh in monitor
                 if not price_data:
-                    time.sleep(1)
+                    time.sleep(1.2)
                     continue
 
                 current_price = price_data['price']
@@ -470,7 +488,7 @@ def monitor_loop():
                                 )
                                 save_alerts(alerts, history)
 
-                time.sleep(1)
+                time.sleep(1.2)  # ~50 calls/min — stay under 60/min limit
 
         except Exception as e:
             logger.error(f"Monitor error: {e}")
@@ -556,7 +574,14 @@ def enrich_alert(alert):
 @app.route('/')
 def index():
     alerts, history = load_alerts()
-    enriched = [enrich_alert(a) for a in alerts]
+    # Enrich with staggered fetch: use cache first, fetch missing ones with delay
+    enriched = []
+    for i, a in enumerate(alerts):
+        ea = enrich_alert(a)
+        enriched.append(ea)
+        # If we actually fetched (not from cache), add small delay
+        if ea.get('current_price') is not None and i < len(alerts) - 1:
+            time.sleep(0.05)  # minimal delay; cache handles rate limiting
     # Sort: hit first, then near, then waiting; within same status sort by symbol
     order = {'hit': 0, 'near': 1, 'waiting': 2, 'error': 3}
     enriched.sort(key=lambda a: (order.get(a['overall_status'], 9), a['symbol']))
