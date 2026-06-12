@@ -1,440 +1,461 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📈 Stock Price Alert Dashboard</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header {
-            background: white;
-            border-radius: 16px;
-            padding: 24px 30px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .header h1 { font-size: 1.7rem; color: #2d3748; }
-        .header p { color: #718096; margin-top: 4px; font-size: 0.9rem; }
-        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .market-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-        .market-open { background: #c6f6d5; color: #276749; }
-        .market-closed { background: #fed7d7; color: #9b2c2c; }
-        .btn {
-            padding: 9px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.88rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn:hover { transform: translateY(-1px); }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5a6fd6; }
-        .btn-success { background: #48bb78; color: white; }
-        .btn-success:hover { background: #38a169; }
-        .btn-danger { background: #fc8181; color: white; font-size: 0.78rem; padding: 5px 10px; }
-        .btn-danger:hover { background: #f56565; }
-        .btn-edit { background: #fbd38d; color: #744210; font-size: 0.78rem; padding: 5px 10px; }
-        .btn-edit:hover { background: #f6ad55; }
-        .btn-telegram { background: #0088cc; color: white; }
-        .btn-telegram:hover { background: #0077b5; }
-        .btn-refresh { background: none; border: 2px solid #667eea; color: #667eea; }
-        .btn-refresh:hover { background: #667eea; color: white; }
-        .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-        }
-        .card-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-        .card-title h2 { font-size: 1.05rem; color: #2d3748; font-weight: 700; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .stat-box {
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-        }
-        .stat-num { font-size: 2.2rem; font-weight: 800; color: #667eea; }
-        .stat-num.red { color: #e53e3e; }
-        .stat-lbl { font-size: 0.78rem; color: #718096; margin-top: 4px; }
-        .alert-row {
-            display: flex;
-            align-items: center;
-            padding: 14px 16px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            border: 2px solid transparent;
-            transition: all 0.2s;
-            gap: 10px;
-        }
-        .alert-row:hover { transform: translateX(2px); }
-        .row-above { background: #f0fff4; border-color: #9ae6b4; }
-        .row-below { background: #fff5f5; border-color: #fc8181; animation: glow 2s infinite; }
-        .row-nodata { background: #f7fafc; border-color: #e2e8f0; }
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(252,129,129,0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(252,129,129,0); }
-        }
-        .row-icon { font-size: 1.3rem; flex-shrink: 0; }
-        .row-info { flex: 1; min-width: 0; }
-        .row-symbol { font-size: 1.05rem; font-weight: 800; color: #2d3748; }
-        .row-company { font-size: 0.78rem; color: #a0aec0; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .row-target { font-size: 0.78rem; color: #718096; margin-top: 2px; }
-        .row-prices { text-align: right; min-width: 120px; }
-        .price-val { font-size: 1.2rem; font-weight: 800; }
-        .price-up { color: #38a169; }
-        .price-down { color: #e53e3e; }
-        .price-na { color: #a0aec0; }
-        .price-chg { font-size: 0.78rem; color: #718096; margin-top: 1px; }
-        .dist-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.72rem;
-            font-weight: 700;
-            margin-top: 3px;
-        }
-        .dist-pos { background: #c6f6d5; color: #276749; }
-        .dist-neg { background: #fed7d7; color: #9b2c2c; }
-        .row-actions { display: flex; gap: 5px; flex-shrink: 0; }
-        .history-item {
-            padding: 10px 12px;
-            background: #f7fafc;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid #667eea;
-        }
-        .h-sym { font-weight: 700; color: #2d3748; font-size: 0.9rem; }
-        .h-msg { font-size: 0.82rem; color: #4a5568; margin-top: 2px; }
-        .h-time { font-size: 0.72rem; color: #a0aec0; margin-top: 2px; }
-        .empty { text-align: center; padding: 36px 20px; color: #a0aec0; }
-        .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
-        .modal-bg {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-bg.on { display: flex; }
-        .modal-box {
-            background: white;
-            border-radius: 16px;
-            padding: 28px;
-            width: 92%;
-            max-width: 420px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-        }
-        .modal-box h3 { font-size: 1.15rem; color: #2d3748; margin-bottom: 18px; }
-        .fg { margin-bottom: 14px; }
-        .fg label { display: block; font-size: 0.82rem; font-weight: 600; color: #4a5568; margin-bottom: 5px; }
-        .fg input {
-            width: 100%;
-            padding: 9px 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.92rem;
-            transition: border-color 0.2s;
-        }
-        .fg input:focus { outline: none; border-color: #667eea; }
-        .fg input:disabled { background: #f7fafc; color: #a0aec0; }
-        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-        .btn-cancel { background: #e2e8f0; color: #4a5568; }
-        .btn-cancel:hover { background: #cbd5e0; }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 18px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.88rem;
-            z-index: 9999;
-            transform: translateY(80px);
-            opacity: 0;
-            transition: all 0.3s;
-            max-width: 300px;
-        }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast-ok { background: #48bb78; }
-        .toast-err { background: #f56565; }
-        .toast-info { background: #4299e1; }
-        .last-upd { font-size: 0.72rem; color: #a0aec0; margin-top: 6px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Stock Alert</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:rgba(255,255,255,.08);
+  --text:#e8eaf0;--muted:#7c8099;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --core:#3b82f6;--growth:#22c55e;--defensive:#f59e0b;--spec:#ef4444;
+  --radius:14px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,.4);
+  --safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)
+}
+html{font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bot) + 80px);
+  -webkit-font-smoothing:antialiased}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(15,17,23,.92);backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:12px 16px;
+  display:flex;align-items:center;gap:10px}
+.topbar-title{font-size:17px;font-weight:700;letter-spacing:-.3px;flex:1}
+.topbar-title span{color:var(--blue)}
+.market-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:20px;letter-spacing:.3px}
+.market-badge.open{background:rgba(34,197,94,.15);color:var(--green)}
+.market-badge.close{background:rgba(239,68,68,.12);color:var(--red)}
+.market-dot{width:7px;height:7px;border-radius:50%}
+.market-badge.open .market-dot{background:var(--green);animation:pulse 2s infinite}
+.market-badge.close .market-dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  width:34px;height:34px;border-radius:var(--radius-sm);cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;transition:background .2s}
+.refresh-btn:hover{background:var(--surface)}
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px 0}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;text-align:center;cursor:pointer}
+.sum-val{font-size:22px;font-weight:800;line-height:1}
+.sum-lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.sum-card.hit .sum-val{color:var(--red)}.sum-card.near .sum-val{color:var(--yellow)}
+.sum-card.waiting .sum-val{color:var(--muted)}.sum-card.total .sum-val{color:var(--text)}
+.filter-bar{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none}
+.filter-bar::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;
+  transition:all .2s;white-space:nowrap}
+.ftab.active,.ftab:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+.ftab[data-cat="core"].active{background:var(--core);border-color:var(--core)}
+.ftab[data-cat="growth"].active{background:var(--growth);border-color:var(--growth)}
+.ftab[data-cat="defensive"].active{background:var(--defensive);border-color:var(--defensive)}
+.ftab[data-cat="spec"].active{background:var(--spec);border-color:var(--spec)}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:12px 16px}
+.alert-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.alert-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--cat-color,var(--blue))}
+.alert-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.alert-card.status-hit{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.06)}
+.alert-card.status-near{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.card-left{flex:1;min-width:0}
+.card-ticker{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.card-name{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-right{text-align:right;flex-shrink:0}
+.card-price{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.card-change{font-size:11px;font-weight:600;margin-top:2px}
+.card-change.pos{color:var(--green)}.card-change.neg{color:var(--red)}.card-change.neu{color:var(--muted)}
+.cat-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.3px}
+.levels-section{margin-top:4px}
+.levels-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.level-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.level-idx{font-size:10px;color:var(--muted);width:16px;flex-shrink:0;text-align:center}
+.level-bar-wrap{flex:1;height:22px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+.level-bar-fill{height:100%;border-radius:6px;transition:width .5s ease;min-width:2px}
+.level-bar-text{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-size:11px;font-weight:700;
+  color:#fff;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.level-bar-dist{position:absolute;top:50%;right:8px;transform:translateY(-50%);font-size:10px;
+  font-weight:600;color:rgba(255,255,255,.7)}
+.level-bar-fill.hit{background:linear-gradient(90deg,#ef4444,#f87171)}
+.level-bar-fill.near{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.level-bar-fill.waiting{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.level-size-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0;white-space:nowrap}
+.size-small{background:rgba(245,158,11,.15);color:#fbbf24}
+.size-mid{background:rgba(249,115,22,.15);color:#fb923c}
+.size-big{background:rgba(239,68,68,.15);color:#f87171}
+.triggered-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;
+  background:rgba(34,197,94,.15);color:var(--green);flex-shrink:0}
+.cooldown-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;
+  background:rgba(124,128,153,.15);color:var(--muted);flex-shrink:0}
+.card-note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4;
+  border-top:1px solid var(--border);padding-top:8px}
+.no-price{font-size:13px;color:var(--muted);text-align:center;padding:12px 0}
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(15,17,23,.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);
+  display:flex;padding-bottom:var(--safe-bot)}
+.btab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 4px;cursor:pointer;color:var(--muted);font-size:10px;gap:2px;transition:color .2s;
+  border:none;background:none;-webkit-tap-highlight-color:transparent}
+.btab .btab-icon{font-size:20px}
+.btab.active{color:var(--blue)}
+.panel{display:none;padding:12px 16px}
+.panel.active{display:block}
+.history-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.hist-ticker{font-size:14px;font-weight:800;min-width:52px}
+.hist-detail{flex:1;min-width:0}
+.hist-msg{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-time{font-size:10px;color:var(--muted);margin-top:2px}
+.hist-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;flex-shrink:0}
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px}
+.form-title{font-size:15px;font-weight:700;margin-bottom:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.form-row.full{grid-template-columns:1fr}
+.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text);font-size:14px;padding:10px 12px;width:100%;outline:none;transition:border-color .2s;
+  -webkit-appearance:none}
+.form-input:focus{border-color:var(--blue)}
+.form-input::placeholder{color:var(--muted)}
+.form-select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text);font-size:14px;padding:10px 12px;width:100%;outline:none;-webkit-appearance:none}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.btn-primary{background:var(--blue);color:#fff;border:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;padding:11px 20px;cursor:pointer;width:100%;transition:opacity .2s;
+  -webkit-tap-highlight-color:transparent}
+.btn-primary:hover{opacity:.85}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--radius-sm);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;transition:background .2s}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:14px}
+.settings-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);
+  border-radius:var(--radius-sm);font-size:13px;font-weight:600;padding:8px 16px;cursor:pointer;transition:background .2s}
+.btn-secondary:hover{background:var(--surface)}
+.empty-state{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:15px;font-weight:600}
+.empty-sub{font-size:13px;margin-top:4px}
+#toast{position:fixed;bottom:calc(var(--safe-bot) + 80px);left:50%;transform:translateX(-50%);
+  background:rgba(30,34,50,.96);border:1px solid var(--border);border-radius:20px;padding:10px 20px;
+  font-size:13px;font-weight:600;color:var(--text);z-index:999;opacity:0;transition:opacity .3s;
+  white-space:nowrap;backdrop-filter:blur(10px)}
+#toast.show{opacity:1}
+.desktop-nav{display:none}
+.desktop-nav .dnav-btn{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;
+  transition:all .2s;white-space:nowrap}
+.desktop-nav .dnav-btn.active,.desktop-nav .dnav-btn:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+@media(min-width:768px){
+  body{padding-bottom:0}
+  .topbar{padding:14px 24px}
+  .topbar-title{font-size:19px}
+  .summary-strip{padding:16px 24px 0;gap:12px}
+  .filter-bar{padding:12px 24px 0}
+  .cards-grid{padding:12px 24px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+  .panel{padding:16px 24px}
+  .bottom-tabs{display:none}
+  .desktop-nav{display:flex!important;gap:8px}
+}
+@media(min-width:1024px){
+  .topbar{padding:14px 32px}
+  .summary-strip{padding:20px 32px 0}
+  .filter-bar{padding:14px 32px 0}
+  .cards-grid{padding:14px 32px;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+  .panel{padding:20px 32px}
+  .sum-val{font-size:28px}
+}
+@media(min-width:1440px){.cards-grid{grid-template-columns:repeat(auto-fill,minmax(380px,1fr))}}
+@media(max-width:375px){
+  .summary-strip{grid-template-columns:repeat(2,1fr)}
+  .cards-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .sum-val{font-size:20px}
+}
+</style>
 </head>
 <body>
-<div class="container">
+<div class="topbar">
+  <div class="topbar-title">📈 <span>Stock</span> Alert</div>
+  <nav class="desktop-nav" id="desktopNav">
+    <button class="dnav-btn active" onclick="switchTab('alerts',this)">🔔 Alerts</button>
+    <button class="dnav-btn" onclick="switchTab('history',this)">📋 History</button>
+    <button class="dnav-btn" onclick="switchTab('add',this)">➕ Add</button>
+    <button class="dnav-btn" onclick="switchTab('settings',this)">⚙️ Settings</button>
+  </nav>
+  <div class="market-badge {% if market_open %}open{% else %}close{% endif %}">
+    <div class="market-dot"></div>
+    {% if market_open %}OPEN{% else %}CLOSED{% endif %}
+  </div>
+  <button class="refresh-btn" onclick="location.reload()" title="Refresh">↻</button>
+</div>
 
-    <!-- Header -->
-    <div class="header">
-        <div>
-            <h1>📈 Stock Price Alert Dashboard</h1>
-            <p>Real-time monitoring · Telegram alerts · ตรวจสอบทุก 1 นาที</p>
+{% set hit_count = alerts|selectattr('overall_status','eq','hit')|list|length %}
+{% set near_count = alerts|selectattr('overall_status','eq','near')|list|length %}
+{% set waiting_count = alerts|selectattr('overall_status','eq','waiting')|list|length %}
+<div class="summary-strip">
+  <div class="sum-card hit"     onclick="filterCards('hit',null)"><div class="sum-val">{{ hit_count }}</div><div class="sum-lbl">🔴 ถึงแนว</div></div>
+  <div class="sum-card near"    onclick="filterCards('near',null)"><div class="sum-val">{{ near_count }}</div><div class="sum-lbl">🟡 ใกล้แนว</div></div>
+  <div class="sum-card waiting" onclick="filterCards('waiting',null)"><div class="sum-val">{{ waiting_count }}</div><div class="sum-lbl">🔵 รอ</div></div>
+  <div class="sum-card total"   onclick="filterCards('all',null)"><div class="sum-val">{{ alerts|length }}</div><div class="sum-lbl">ทั้งหมด</div></div>
+</div>
+
+<div class="filter-bar" id="filterBar">
+  <button class="ftab active" data-filter="all"       onclick="filterCards('all',this)">ทั้งหมด</button>
+  <button class="ftab"        data-filter="hit"       onclick="filterCards('hit',this)">🔴 ถึงแนว</button>
+  <button class="ftab"        data-filter="near"      onclick="filterCards('near',this)">🟡 ใกล้แนว</button>
+  <button class="ftab" data-cat="core"      data-filter="core"      onclick="filterCards('core',this)">🏛️ Core</button>
+  <button class="ftab" data-cat="growth"    data-filter="growth"    onclick="filterCards('growth',this)">🚀 Growth</button>
+  <button class="ftab" data-cat="defensive" data-filter="defensive" onclick="filterCards('defensive',this)">🛡️ Defensive</button>
+  <button class="ftab" data-cat="spec"      data-filter="spec"      onclick="filterCards('spec',this)">🎲 Spec</button>
+</div>
+
+<!-- ALERTS PANEL -->
+<div class="panel active" id="panel-alerts">
+  <div class="cards-grid" id="cardsGrid">
+    {% for a in alerts %}
+    <div class="alert-card status-{{ a.overall_status }}"
+         data-status="{{ a.overall_status }}"
+         data-cat="{{ a.get('category','growth') }}"
+         style="--cat-color:{{ a.category_color }}">
+      <div class="card-header">
+        <div class="card-left">
+          <div class="card-ticker">{{ a.symbol }}</div>
+          <div class="card-name">{{ a.company_name }}</div>
         </div>
-        <div class="header-actions">
-            {% if market_open %}
-            <span class="market-badge market-open">🟢 ตลาดเปิด</span>
-            {% else %}
-            <span class="market-badge market-closed">🔴 ตลาดปิด</span>
+        <div class="card-right">
+          {% if a.current_price %}
+            <div class="card-price">${{ "%.2f"|format(a.current_price) }}</div>
+            <div class="card-change {% if a.change_pct > 0 %}pos{% elif a.change_pct < 0 %}neg{% else %}neu{% endif %}">
+              {% if a.change_pct > 0 %}▲{% elif a.change_pct < 0 %}▼{% endif %}{{ "%.2f"|format(a.change_pct|abs) }}%
+            </div>
+          {% else %}
+            <div class="card-price" style="color:var(--muted)">—</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="cat-badge" style="background:{{ a.category_color }}22;color:{{ a.category_color }}">{{ a.category_label }}</div>
+      {% if a.level_statuses %}
+      <div class="levels-section">
+        <div class="levels-label">แนวซื้อ {{ a.level_statuses|length }} ระดับ</div>
+        {% for ls in a.level_statuses %}
+        <div class="level-row">
+          <div class="level-idx">{{ ls.idx + 1 }}</div>
+          <div class="level-bar-wrap">
+            {% if a.current_price %}
+              {% if ls.status == 'hit' %}{% set fill = 100 %}
+              {% elif ls.status == 'near' %}{% set fill = [95 - ls.dist_pct * 3, 60]|max %}
+              {% else %}{% set raw = 100 - (ls.dist_pct / 50 * 100) %}{% set fill = [[raw,5]|max,55]|min %}{% endif %}
+            {% else %}{% set fill = 0 %}{% endif %}
+            <div class="level-bar-fill {{ ls.status }}" style="width:{{ fill }}%"></div>
+            <div class="level-bar-text">${{ "%.0f"|format(ls.level) }}</div>
+            {% if a.current_price %}
+            <div class="level-bar-dist">
+              {% if ls.dist_pct <= 0 %}HIT{% elif ls.dist_pct <= 5 %}{{ "%.1f"|format(ls.dist_pct) }}%{% else %}+{{ "%.1f"|format(ls.dist_pct) }}%{% endif %}
+            </div>
             {% endif %}
-            <button class="btn btn-telegram" onclick="testTelegram()">🔔 Test Telegram</button>
-            <button class="btn btn-refresh" onclick="location.reload()">🔄 Refresh</button>
+          </div>
+          <span class="level-size-badge size-{{ ls.size }}">{{ ls.size_label }}</span>
+          {% if ls.triggered %}<span class="triggered-badge">✓ แล้ว</span>
+          {% elif ls.in_cooldown %}<span class="cooldown-badge">⏳</span>{% endif %}
         </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <div class="no-price">ไม่สามารถดึงราคาได้</div>
+      {% endif %}
+      {% if a.note %}<div class="card-note">{{ a.note }}</div>{% endif %}
     </div>
-
-    <div class="grid">
-
-        <!-- Left: Alert List -->
-        <div class="card">
-            <div class="card-title">
-                <h2>🎯 Active Alerts ({{ alerts|length }} หุ้น)</h2>
-                <button class="btn btn-primary" onclick="openAdd()">+ เพิ่มหุ้น</button>
-            </div>
-
-            {% if alerts %}
-                {% for a in alerts %}
-                <div class="alert-row {% if a.status == 'below_target' %}row-below{% elif a.status == 'above_target' %}row-above{% else %}row-nodata{% endif %}">
-                    <span class="row-icon">{% if a.status == 'below_target' %}🔴{% elif a.status == 'above_target' %}🟢{% else %}⚪{% endif %}</span>
-                    <div class="row-info">
-                        <div class="row-symbol">{{ a.symbol }}</div>
-                        <div class="row-company">{{ a.company_name }}</div>
-                        <div class="row-target">เป้าซื้อ: ${{ "%.2f"|format(a.buy_price) }}</div>
-                    </div>
-                    <div class="row-prices">
-                        {% if a.current_price %}
-                            <div class="price-val {% if a.change > 0 %}price-up{% elif a.change < 0 %}price-down{% else %}price-na{% endif %}">
-                                ${{ "%.2f"|format(a.current_price) }}
-                            </div>
-                            <div class="price-chg">
-                                {% if a.change >= 0 %}▲{% else %}▼{% endif %}
-                                ${{ "%.2f"|format(a.change|abs) }} ({{ "%.1f"|format(a.change_pct|abs) }}%)
-                            </div>
-                            <span class="dist-badge {% if a.distance_pct >= 0 %}dist-pos{% else %}dist-neg{% endif %}">
-                                {% if a.distance_pct >= 0 %}+{% endif %}{{ "%.1f"|format(a.distance_pct) }}% จากเป้า
-                            </span>
-                        {% else %}
-                            <div class="price-val price-na">N/A</div>
-                            <div class="price-chg">ดึงราคาไม่ได้</div>
-                        {% endif %}
-                    </div>
-                    <div class="row-actions">
-                        <button class="btn btn-edit" onclick="openEdit('{{ a.symbol }}',{{ a.buy_price }},'{{ a.company_name }}')">✏️</button>
-                        <button class="btn btn-danger" onclick="delAlert('{{ a.symbol }}')">🗑️</button>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty">
-                    <div class="empty-icon">📊</div>
-                    <p>ยังไม่มีหุ้นที่ตั้ง alert</p>
-                    <p style="font-size:0.82rem;margin-top:6px;">กด "+ เพิ่มหุ้น" เพื่อเริ่มต้น</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Right: Stats + History -->
-        <div>
-            <div class="card" style="margin-bottom:20px;">
-                <h2 style="font-size:1.05rem;color:#2d3748;font-weight:700;margin-bottom:14px;">📊 สถิติ</h2>
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-num">{{ alerts|length }}</div>
-                        <div class="stat-lbl">หุ้นทั้งหมด</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-num red">{{ alerts|selectattr('status','equalto','below_target')|list|length }}</div>
-                        <div class="stat-lbl">🔴 ถึงราคาซื้อ</div>
-                    </div>
-                </div>
-                <div class="last-upd" id="lastUpd">อัปเดตล่าสุด: {{ now }}</div>
-            </div>
-
-            <div class="card">
-                <h2 style="font-size:1.05rem;color:#2d3748;font-weight:700;margin-bottom:14px;">📜 ประวัติ Alert</h2>
-                {% if history %}
-                    {% for h in history|reverse %}
-                    <div class="history-item">
-                        <div class="h-sym">{{ h.symbol }} @ ${{ h.price }}</div>
-                        <div class="h-msg">{{ h.message }}</div>
-                        <div class="h-time">{{ h.timestamp }}</div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="empty">
-                        <div class="empty-icon">🔕</div>
-                        <p>ยังไม่มีประวัติ alert</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
+    {% else %}
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📭</div>
+      <div class="empty-text">ยังไม่มี Alert</div>
+      <div class="empty-sub">กดแท็บ ➕ เพื่อเพิ่มหุ้น</div>
     </div>
+    {% endfor %}
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--muted);padding:8px 0 4px">อัปเดตล่าสุด: {{ now }}</div>
 </div>
 
-<!-- Add Modal -->
-<div class="modal-bg" id="mAdd">
-    <div class="modal-box">
-        <h3>➕ เพิ่มหุ้นใหม่</h3>
-        <div class="fg">
-            <label>Symbol (เช่น AAPL, TSLA)</label>
-            <input type="text" id="aSymbol" placeholder="AAPL" style="text-transform:uppercase">
-        </div>
-        <div class="fg">
-            <label>ชื่อบริษัท (ไม่บังคับ)</label>
-            <input type="text" id="aCompany" placeholder="Apple Inc.">
-        </div>
-        <div class="fg">
-            <label>ราคาซื้อ ($)</label>
-            <input type="number" id="aBuyPrice" placeholder="150.00" step="0.01" min="0.01">
-        </div>
-        <div class="modal-btns">
-            <button class="btn btn-cancel" onclick="closeM('mAdd')">ยกเลิก</button>
-            <button class="btn btn-success" onclick="doAdd()">✅ เพิ่มหุ้น</button>
-        </div>
+<!-- HISTORY PANEL -->
+<div class="panel" id="panel-history">
+  <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">📋 ประวัติ Alert</h3>
+  {% if history %}
+    {% for h in history|reverse %}
+    <div class="history-item">
+      <div class="hist-ticker">{{ h.symbol }}</div>
+      <div class="hist-detail">
+        <div class="hist-msg">ถึงแนว ${{ "%.2f"|format(h.level) }} · ราคา ${{ "%.2f"|format(h.price) }}{% if h.size %} · {{ h.size }}{% endif %}</div>
+        <div class="hist-time">{{ h.timestamp }}</div>
+      </div>
+      {% if h.level_idx is defined %}
+      <span class="hist-badge" style="background:rgba(59,130,246,.15);color:#60a5fa">ไม้ {{ h.level_idx+1 }}/{{ h.total_levels }}</span>
+      {% endif %}
     </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-text">ยังไม่มีประวัติ</div>
+      <div class="empty-sub">Alert จะแสดงที่นี่เมื่อราคาถึงแนวซื้อ</div>
+    </div>
+  {% endif %}
 </div>
 
-<!-- Edit Modal -->
-<div class="modal-bg" id="mEdit">
-    <div class="modal-box">
-        <h3>✏️ แก้ไขราคาซื้อ</h3>
-        <input type="hidden" id="eSym">
-        <div class="fg">
-            <label>Symbol</label>
-            <input type="text" id="eSymD" disabled>
-        </div>
-        <div class="fg">
-            <label>ชื่อบริษัท</label>
-            <input type="text" id="eComp">
-        </div>
-        <div class="fg">
-            <label>ราคาซื้อใหม่ ($)</label>
-            <input type="number" id="eBuyP" step="0.01" min="0.01">
-        </div>
-        <div class="modal-btns">
-            <button class="btn btn-cancel" onclick="closeM('mEdit')">ยกเลิก</button>
-            <button class="btn btn-primary" onclick="doEdit()">💾 บันทึก</button>
-        </div>
+<!-- ADD PANEL -->
+<div class="panel" id="panel-add">
+  <div class="add-form">
+    <div class="form-title">➕ เพิ่ม Alert ใหม่</div>
+    <div class="form-row">
+      <div><input class="form-input" id="inp-symbol" placeholder="Symbol เช่น NVDA" style="text-transform:uppercase"></div>
+      <div><input class="form-input" id="inp-name" placeholder="ชื่อบริษัท"></div>
     </div>
+    <div class="form-row">
+      <div>
+        <select class="form-select" id="inp-cat">
+          <option value="core">🏛️ Core</option>
+          <option value="growth" selected>🚀 Growth</option>
+          <option value="defensive">🛡️ Defensive</option>
+          <option value="speculative">🎲 Speculative</option>
+        </select>
+      </div>
+      <div>
+        <input class="form-input" id="inp-levels" placeholder="แนวซื้อ เช่น 30,25,20">
+        <div class="form-hint">คั่นด้วยจุลภาค หลายระดับได้</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <select class="form-select" id="inp-sizes">
+          <option value="small,mid,big">เล็ก → กลาง → หนัก</option>
+          <option value="small,small,mid,big">เล็ก×2 → กลาง → หนัก</option>
+          <option value="mid,mid,big">กลาง×2 → หนัก</option>
+          <option value="small,mid">เล็ก → กลาง</option>
+          <option value="big">หนักเดียว</option>
+        </select>
+        <div class="form-hint">ขนาดไม้แต่ละระดับ</div>
+      </div>
+      <div><input class="form-input" id="inp-note" placeholder="หมายเหตุ (ไม่บังคับ)"></div>
+    </div>
+    <button class="btn-primary" onclick="addAlert()">เพิ่ม Alert</button>
+  </div>
+  <h3 style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--muted)">จัดการ Alert ที่มีอยู่</h3>
+  {% for a in alerts %}
+  <div class="history-item">
+    <div class="hist-ticker">{{ a.symbol }}</div>
+    <div class="hist-detail">
+      <div class="hist-msg">{{ a.company_name }}</div>
+      <div class="hist-time">{{ a.category_label }} · {% if a.levels %}${{ a.levels|join(' / $') }}{% endif %}</div>
+    </div>
+    <button class="btn-danger" onclick="deleteAlert('{{ a.symbol }}')">ลบ</button>
+  </div>
+  {% endfor %}
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- SETTINGS PANEL -->
+<div class="panel" id="panel-settings">
+  <div class="add-form">
+    <div class="form-title">⚙️ ตั้งค่าระบบ</div>
+    <div class="settings-row">
+      <div><div class="settings-label">ทดสอบ Telegram</div><div class="settings-sub">ส่ง test message ไปยัง bot</div></div>
+      <button class="btn-secondary" onclick="testTelegram()">ส่งทดสอบ</button>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">Cooldown ต่อแนว</div><div class="settings-sub">ป้องกัน alert ซ้ำ</div></div>
+      <span style="font-size:13px;color:var(--muted)">4h</span>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">Reset Threshold</div><div class="settings-sub">ราคาขึ้น +10% จากแนว → reset</div></div>
+      <span style="font-size:13px;color:var(--muted)">+10%</span>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">ตลาดเปิด</div><div class="settings-sub">จันทร์–ศุกร์ 20:30–03:00 น. (ไทย)</div></div>
+      <span class="market-badge {% if market_open %}open{% else %}close{% endif %}" style="position:static">
+        <div class="market-dot"></div>{% if market_open %}OPEN{% else %}CLOSED{% endif %}
+      </span>
+    </div>
+    <div class="settings-row">
+      <div><div class="settings-label">Polling Interval</div><div class="settings-sub">ตรวจราคาทุก 60 วินาที</div></div>
+      <span style="font-size:13px;color:var(--muted)">60s</span>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-tabs">
+  <button class="btab active" onclick="switchTab('alerts',this)"><span class="btab-icon">🔔</span>Alerts</button>
+  <button class="btab" onclick="switchTab('history',this)"><span class="btab-icon">📋</span>History</button>
+  <button class="btab" onclick="switchTab('add',this)"><span class="btab-icon">➕</span>Add</button>
+  <button class="btab" onclick="switchTab('settings',this)"><span class="btab-icon">⚙️</span>Settings</button>
+</div>
+
+<div id="toast"></div>
 
 <script>
-    // Auto-refresh every 60 seconds
-    setTimeout(() => location.reload(), 60000);
-
-    function toast(msg, type='ok') {
-        const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.className = `toast toast-${type} show`;
-        setTimeout(() => { t.className = `toast toast-${type}`; }, 3500);
-    }
-
-    function openAdd() {
-        ['aSymbol','aCompany','aBuyPrice'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('mAdd').classList.add('on');
-        setTimeout(() => document.getElementById('aSymbol').focus(), 100);
-    }
-
-    function openEdit(sym, price, company) {
-        document.getElementById('eSym').value = sym;
-        document.getElementById('eSymD').value = sym;
-        document.getElementById('eComp').value = company;
-        document.getElementById('eBuyP').value = price;
-        document.getElementById('mEdit').classList.add('on');
-        setTimeout(() => document.getElementById('eBuyP').focus(), 100);
-    }
-
-    function closeM(id) { document.getElementById(id).classList.remove('on'); }
-
-    document.querySelectorAll('.modal-bg').forEach(el => {
-        el.addEventListener('click', e => { if (e.target === el) el.classList.remove('on'); });
-    });
-
-    async function doAdd() {
-        const sym = document.getElementById('aSymbol').value.trim().toUpperCase();
-        const comp = document.getElementById('aCompany').value.trim();
-        const price = parseFloat(document.getElementById('aBuyPrice').value);
-        if (!sym || isNaN(price) || price <= 0) { toast('กรุณากรอก Symbol และราคาให้ถูกต้อง', 'err'); return; }
-        try {
-            const r = await fetch('/api/alerts', {
-                method: 'POST',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({symbol: sym, company_name: comp || sym, buy_price: price})
-            });
-            const d = await r.json();
-            if (r.ok) { toast(`✅ เพิ่ม ${sym} สำเร็จ!`); closeM('mAdd'); setTimeout(() => location.reload(), 900); }
-            else toast(d.error || 'เกิดข้อผิดพลาด', 'err');
-        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
-    }
-
-    async function doEdit() {
-        const sym = document.getElementById('eSym').value;
-        const comp = document.getElementById('eComp').value.trim();
-        const price = parseFloat(document.getElementById('eBuyP').value);
-        if (isNaN(price) || price <= 0) { toast('กรุณากรอกราคาให้ถูกต้อง', 'err'); return; }
-        try {
-            const r = await fetch(`/api/alerts/${sym}`, {
-                method: 'PUT',
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({buy_price: price, company_name: comp})
-            });
-            if (r.ok) { toast(`✅ อัปเดต ${sym} สำเร็จ!`); closeM('mEdit'); setTimeout(() => location.reload(), 900); }
-            else toast('เกิดข้อผิดพลาด', 'err');
-        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
-    }
-
-    async function delAlert(sym) {
-        if (!confirm(`ต้องการลบ ${sym} ออกจาก alert list?`)) return;
-        try {
-            const r = await fetch(`/api/alerts/${sym}`, {method: 'DELETE'});
-            if (r.ok) { toast(`🗑️ ลบ ${sym} สำเร็จ!`); setTimeout(() => location.reload(), 900); }
-            else toast('เกิดข้อผิดพลาด', 'err');
-        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
-    }
-
-    async function testTelegram() {
-        toast('กำลังส่ง test message...', 'info');
-        try {
-            const r = await fetch('/api/test-telegram', {method: 'POST'});
-            const d = await r.json();
-            if (d.success) toast('✅ ส่ง Telegram สำเร็จ! ตรวจสอบ Telegram ของคุณ');
-            else toast('❌ ' + (d.error || 'ส่งไม่สำเร็จ'), 'err');
-        } catch { toast('เชื่อมต่อไม่ได้', 'err'); }
-    }
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.btab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.dnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  const dn=document.querySelector(`.dnav-btn[onclick*="'${name}'"]`);
+  if(dn)dn.classList.add('active');
+}
+function filterCards(filter,btn){
+  if(btn){document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  document.querySelectorAll('.alert-card').forEach(card=>{
+    const s=card.dataset.status,c=card.dataset.cat;
+    let show=filter==='all'||(filter==='hit'&&s==='hit')||(filter==='near'&&s==='near')||(filter===c);
+    card.style.display=show?'':'none';
+  });
+}
+async function addAlert(){
+  const symbol=document.getElementById('inp-symbol').value.trim().toUpperCase();
+  const name=document.getElementById('inp-name').value.trim();
+  const cat=document.getElementById('inp-cat').value;
+  const lvlRaw=document.getElementById('inp-levels').value.trim();
+  const szRaw=document.getElementById('inp-sizes').value.trim();
+  const note=document.getElementById('inp-note').value.trim();
+  if(!symbol||!lvlRaw){showToast('⚠️ กรุณากรอก Symbol และแนวซื้อ');return;}
+  const levels=lvlRaw.split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+  const sizes=szRaw.split(',').map(x=>x.trim());
+  if(!levels.length){showToast('⚠️ แนวซื้อไม่ถูกต้อง');return;}
+  try{
+    const res=await fetch('/api/alerts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol,company_name:name||symbol,category:cat,levels,sizes,note})});
+    const data=await res.json();
+    if(res.ok){showToast('✅ เพิ่ม '+symbol+' สำเร็จ');setTimeout(()=>location.reload(),1200);}
+    else showToast('❌ '+(data.error||'เกิดข้อผิดพลาด'));
+  }catch(e){showToast('❌ Network error');}
+}
+async function deleteAlert(symbol){
+  if(!confirm('ลบ '+symbol+' ออกจาก Alert?'))return;
+  try{
+    const res=await fetch('/api/alerts/'+symbol,{method:'DELETE'});
+    if(res.ok){showToast('🗑️ ลบ '+symbol+' แล้ว');setTimeout(()=>location.reload(),1000);}
+    else showToast('❌ ลบไม่สำเร็จ');
+  }catch(e){showToast('❌ Network error');}
+}
+async function testTelegram(){
+  showToast('📤 กำลังส่ง...');
+  try{
+    const res=await fetch('/api/test-telegram',{method:'POST'});
+    const data=await res.json();
+    showToast(data.success?'✅ ส่ง Telegram สำเร็จ!':'❌ '+data.error);
+  }catch(e){showToast('❌ Network error');}
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+{% if market_open %}setTimeout(()=>location.reload(),60000);{% endif %}
 </script>
 </body>
 </html>
