@@ -208,27 +208,38 @@ body{
 .edit-panel.open{display:block}
 .edit-panel-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
 .edit-levels-wrap{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.edit-level-row{display:flex;align-items:center;gap:6px}
-.edit-level-label{font-size:11px;color:var(--muted);width:40px;flex-shrink:0}
+.edit-level-row{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:8px 10px;
+  margin-bottom:4px;
+  display:flex;flex-direction:column;gap:6px
+}
+.edit-level-row-top{display:flex;align-items:center;gap:8px}
+.edit-level-label{font-size:11px;font-weight:700;color:var(--muted);width:36px;flex-shrink:0}
 .edit-level-input{
-  flex:1;background:var(--surface);border:1px solid var(--border-strong);
-  border-radius:6px;color:var(--text);font-size:13px;font-weight:600;
-  padding:6px 10px;outline:none;transition:border-color .2s;
-  -webkit-appearance:none
+  flex:1;background:var(--surface2);border:1px solid var(--border-strong);
+  border-radius:6px;color:var(--text);font-size:15px;font-weight:700;
+  padding:8px 12px;outline:none;transition:border-color .2s;
+  -webkit-appearance:none;min-width:0
 }
 .edit-level-input:focus{border-color:var(--blue)}
+.edit-level-row-bottom{display:flex;align-items:center;gap:8px;padding-left:44px}
 .edit-size-select{
-  background:var(--surface);border:1px solid var(--border-strong);
-  border-radius:6px;color:var(--text);font-size:12px;
-  padding:6px 8px;outline:none;-webkit-appearance:none;
+  flex:1;background:var(--surface2);border:1px solid var(--border-strong);
+  border-radius:6px;color:var(--text);font-size:13px;font-weight:600;
+  padding:7px 10px;outline:none;-webkit-appearance:none;
   cursor:pointer
 }
 .edit-remove-btn{
-  background:none;border:none;color:var(--red);
-  font-size:14px;cursor:pointer;padding:4px;
-  border-radius:6px;transition:background .2s;flex-shrink:0
+  background:var(--red-bg);border:1px solid rgba(214,59,59,.3);
+  color:var(--red);font-size:12px;font-weight:700;
+  padding:7px 14px;border-radius:6px;
+  cursor:pointer;transition:background .2s;flex-shrink:0;
+  white-space:nowrap
 }
-.edit-remove-btn:hover{background:var(--red-bg)}
+.edit-remove-btn:hover{background:rgba(214,59,59,.2)}
 .edit-add-level-btn{
   background:none;border:1px dashed var(--border-strong);
   color:var(--muted);font-size:12px;font-weight:600;
@@ -504,16 +515,20 @@ body{
         <div class="edit-levels-wrap" id="edit-rows-{{ a.symbol }}">
           {% for ls in a.level_statuses %}
           <div class="edit-level-row">
-            <span class="edit-level-label">ไม้ {{ ls.idx + 1 }}</span>
-            <input class="edit-level-input" type="number" step="0.01"
-                   value="{{ "%.2f"|format(ls.level) }}"
-                   placeholder="ราคา">
-            <select class="edit-size-select">
-              <option value="small" {% if ls.size == 'small' %}selected{% endif %}>เล็ก</option>
-              <option value="mid"   {% if ls.size == 'mid'   %}selected{% endif %}>กลาง</option>
-              <option value="big"   {% if ls.size == 'big'   %}selected{% endif %}>หนัก</option>
-            </select>
-            <button class="edit-remove-btn" onclick="removeEditRow(this)" title="ลบแนวนี้">✕</button>
+            <div class="edit-level-row-top">
+              <span class="edit-level-label">ไม้ {{ ls.idx + 1 }}</span>
+              <input class="edit-level-input" type="number" step="0.01"
+                     value="{{ "%.2f"|format(ls.level) }}"
+                     placeholder="ราคา">
+            </div>
+            <div class="edit-level-row-bottom">
+              <select class="edit-size-select">
+                <option value="small" {% if ls.size == 'small' %}selected{% endif %}>🟡 เล็ก</option>
+                <option value="mid"   {% if ls.size == 'mid'   %}selected{% endif %}>🟠 กลาง</option>
+                <option value="big"   {% if ls.size == 'big'   %}selected{% endif %}>🔴 หนัก</option>
+              </select>
+              <button class="edit-remove-btn" onclick="removeEditRow(this)">✕ ลบไม้นี้</button>
+            </div>
           </div>
           {% endfor %}
         </div>
@@ -697,14 +712,18 @@ function addEditRow(symbol){
   const row = document.createElement('div');
   row.className = 'edit-level-row';
   row.innerHTML = `
-    <span class="edit-level-label">ไม้ ${idx}</span>
-    <input class="edit-level-input" type="number" step="0.01" placeholder="ราคา">
-    <select class="edit-size-select">
-      <option value="small">เล็ก</option>
-      <option value="mid" selected>กลาง</option>
-      <option value="big">หนัก</option>
-    </select>
-    <button class="edit-remove-btn" onclick="removeEditRow(this)" title="ลบแนวนี้">✕</button>
+    <div class="edit-level-row-top">
+      <span class="edit-level-label">ไม้ ${idx}</span>
+      <input class="edit-level-input" type="number" step="0.01" placeholder="ราคา">
+    </div>
+    <div class="edit-level-row-bottom">
+      <select class="edit-size-select">
+        <option value="small">🟡 เล็ก</option>
+        <option value="mid" selected>🟠 กลาง</option>
+        <option value="big">🔴 หนัก</option>
+      </select>
+      <button class="edit-remove-btn" onclick="removeEditRow(this)">✕ ลบไม้นี้</button>
+    </div>
   `;
   wrap.appendChild(row);
   row.querySelector('input').focus();
@@ -729,10 +748,10 @@ async function saveEdit(symbol){
   const levels=[], sizes=[];
   let valid=true;
   rows.forEach(row=>{
-    const v = parseFloat(row.querySelector('input').value);
-    const s = row.querySelector('select').value;
-    if(isNaN(v)||v<=0){valid=false;row.querySelector('input').style.borderColor='var(--red)';}
-    else{row.querySelector('input').style.borderColor='';levels.push(v);sizes.push(s);}
+    const v = parseFloat(row.querySelector('.edit-level-input').value);
+    const s = row.querySelector('.edit-size-select').value;
+    if(isNaN(v)||v<=0){valid=false;row.querySelector('.edit-level-input').style.borderColor='var(--red)';}
+    else{row.querySelector('.edit-level-input').style.borderColor='';levels.push(v);sizes.push(s);}
   });
   if(!valid){showToast('⚠️ กรุณากรอกราคาให้ครบและถูกต้อง');return;}
 
