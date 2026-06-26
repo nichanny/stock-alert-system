@@ -104,6 +104,40 @@ body{
 .ftab[data-cat="defensive"].active{background:var(--defensive);border-color:var(--defensive)}
 .ftab[data-cat="spec"].active{background:var(--spec);border-color:var(--spec)}
 
+/* ── Search Bar ── */
+.search-wrap{
+  padding:10px 16px 0;
+  position:relative
+}
+.search-input{
+  width:100%;background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:10px;color:var(--text);font-size:14px;
+  padding:9px 36px 9px 38px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none
+}
+.search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.search-icon{
+  position:absolute;left:28px;top:50%;transform:translateY(-50%);
+  font-size:15px;pointer-events:none
+}
+.search-clear{
+  position:absolute;right:28px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--muted);font-size:16px;
+  cursor:pointer;padding:2px 4px;border-radius:4px;
+  display:none
+}
+.search-clear.visible{display:block}
+
+/* ── Edit Panel Clear All ── */
+.edit-clear-btn{
+  background:none;border:1px dashed rgba(214,59,59,.4);
+  color:var(--red);font-size:12px;font-weight:600;
+  padding:5px 10px;border-radius:6px;cursor:pointer;
+  transition:all .2s;white-space:nowrap;flex-shrink:0
+}
+.edit-clear-btn:hover{background:var(--red-bg);border-style:solid}
+
 /* ── Cards Grid ── */
 .cards-grid{
   display:grid;
@@ -383,6 +417,7 @@ body{
   .topbar-title{font-size:19px}
   .summary-strip{padding:16px 24px 0;gap:12px}
   .filter-bar{padding:12px 24px 0}
+  .search-wrap{padding:10px 24px 0}
   .cards-grid{padding:12px 24px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
   .panel{padding:16px 24px}
   .bottom-tabs{display:none}
@@ -392,6 +427,7 @@ body{
   .topbar{padding:14px 32px}
   .summary-strip{padding:20px 32px 0}
   .filter-bar{padding:14px 32px 0}
+  .search-wrap{padding:10px 32px 0}
   .cards-grid{padding:14px 32px;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
   .panel{padding:20px 32px}
   .sum-val{font-size:28px}
@@ -443,6 +479,13 @@ body{
   <button class="ftab" data-cat="growth"    data-filter="growth"    onclick="filterCards('growth',this)">🚀 Growth</button>
   <button class="ftab" data-cat="defensive" data-filter="defensive" onclick="filterCards('defensive',this)">🛡️ Defensive</button>
   <button class="ftab" data-cat="spec"      data-filter="spec"      onclick="filterCards('spec',this)">🎲 Spec</button>
+</div>
+
+<!-- Search Bar -->
+<div class="search-wrap" id="searchWrap">
+  <span class="search-icon">🔍</span>
+  <input class="search-input" id="searchInput" type="search" placeholder="ค้นหุ้น เช่น PLTR, META, Growth..." autocomplete="off" autocorrect="off" autocapitalize="characters" oninput="onSearch(this)">
+  <button class="search-clear" id="searchClearBtn" onclick="clearSearch()">✕</button>
 </div>
 
 <!-- ALERTS PANEL -->
@@ -510,8 +553,11 @@ body{
       {% if a.note %}<div class="card-note">{{ a.note }}</div>{% endif %}
 
       <!-- Inline Edit Panel -->
-      <div class="edit-panel" id="edit-{{ a.symbol }}">
-        <div class="edit-panel-title">✏️ แก้ไขแนวรับ — {{ a.symbol }}</div>
+      <div class="edit-panel" id="edit-{{ a.symbol }}" data-symbol="{{ a.symbol }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="edit-panel-title" style="margin-bottom:0">✏️ แก้ไขแนวรับ — {{ a.symbol }}</div>
+          <button class="edit-clear-btn" onclick="clearAllLevels('{{ a.symbol }}')">&#128465; ล้างทั้งหมด</button>
+        </div>
         <div class="edit-levels-wrap" id="edit-rows-{{ a.symbol }}">
           {% for ls in a.level_statuses %}
           <div class="edit-level-row">
@@ -682,12 +728,38 @@ function switchTab(name,btn){
 }
 
 /* ── Filter Cards ── */
+let _activeFilter='all';
 function filterCards(filter,btn){
+  _activeFilter=filter;
   if(btn){document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  applyFilters();
+}
+
+/* ── Search ── */
+function onSearch(inp){
+  const clearBtn=document.getElementById('searchClearBtn');
+  clearBtn.classList.toggle('visible', inp.value.length>0);
+  applyFilters();
+}
+function clearSearch(){
+  const inp=document.getElementById('searchInput');
+  inp.value='';
+  document.getElementById('searchClearBtn').classList.remove('visible');
+  applyFilters();
+  inp.focus();
+}
+
+function applyFilters(){
+  const q=(document.getElementById('searchInput').value||'').trim().toUpperCase();
+  const filter=_activeFilter;
   document.querySelectorAll('.alert-card').forEach(card=>{
-    const s=card.dataset.status,c=card.dataset.cat;
-    let show=filter==='all'||(filter==='hit'&&s==='hit')||(filter==='near'&&s==='near')||(filter===c);
-    card.style.display=show?'':'none';
+    const s=card.dataset.status, c=card.dataset.cat, sym=card.dataset.symbol||'';
+    const name=(card.querySelector('.card-name')||{}).textContent||'';
+    // Category/status filter
+    let passFilter=filter==='all'||(filter==='hit'&&s==='hit')||(filter==='near'&&s==='near')||(filter===c);
+    // Search filter: match symbol or company name
+    let passSearch=!q||sym.includes(q)||name.toUpperCase().includes(q);
+    card.style.display=(passFilter&&passSearch)?'':'none';
   });
 }
 
@@ -704,6 +776,32 @@ function toggleEdit(symbol, btn){
     // Scroll card into view
     panel.closest('.alert-card').scrollIntoView({behavior:'smooth',block:'nearest'});
   }
+}
+
+function clearAllLevels(symbol){
+  const wrap = document.getElementById('edit-rows-'+symbol);
+  if(!confirm('ล้างราคาแนวรับทั้งหมดของ '+symbol+'?\nจะเหลือช่องว่าง 1 แถวให้กรอกใหม่'))return;
+  wrap.innerHTML='';
+  // Add one blank row
+  const row=document.createElement('div');
+  row.className='edit-level-row';
+  row.innerHTML=`
+    <div class="edit-level-row-top">
+      <span class="edit-level-label">ไม้ 1</span>
+      <input class="edit-level-input" type="number" step="0.01" placeholder="ใส่ราคาแนวรับ">
+    </div>
+    <div class="edit-level-row-bottom">
+      <select class="edit-size-select">
+        <option value="small">🟡 เล็ก</option>
+        <option value="mid" selected>🟠 กลาง</option>
+        <option value="big">🔴 หนัก</option>
+      </select>
+      <button class="edit-remove-btn" onclick="removeEditRow(this)">✕ ลบไม้นี้</button>
+    </div>
+  `;
+  wrap.appendChild(row);
+  row.querySelector('input').focus();
+  showToast('🗑️ ล้างแล้ว ใส่ราคาใหม่แล้วกด 💾 บันทึก');
 }
 
 function addEditRow(symbol){
