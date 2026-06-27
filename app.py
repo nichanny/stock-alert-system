@@ -45,73 +45,14 @@ PRICE_CACHE_TTL = 90  # seconds
 
 # ─── Default Stock List (multi-level) ────────────────────────────────────────
 DEFAULT_ALERTS = [
+    # ── Core ──────────────────────────────────────────────────────────────────
     {
-        "symbol": "ETN",
-        "company_name": "Eaton Corporation",
+        "symbol": "MSFT",
+        "company_name": "Microsoft Corporation",
         "category": "core",
-        "levels": [380.0, 360.0, 340.0, 315.0],
-        "sizes":  ["small", "mid", "mid", "big"],
-        "note": "AI Power Infra · 3 ตัว AXON/NOW/ETN Phon ทยอยสะสม",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "PLTR",
-        "company_name": "Palantir Technologies Inc.",
-        "category": "growth",
-        "levels": [135.0, 125.0, 100.0],
+        "levels": [350.0, 341.0, 300.0],
         "sizes":  ["small", "mid", "big"],
-        "note": "Phon ถือยาว · Top pick AI / Data",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "CEG",
-        "company_name": "Constellation Energy Corporation",
-        "category": "growth",
-        "levels": [206.0, 200.0, 180.0, 170.0],
-        "sizes":  ["small", "small", "mid", "big"],
-        "note": "Nuclear Energy · ลงมา 27% YTD",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "AVAV",
-        "company_name": "AeroVironment Inc.",
-        "category": "core",
-        "levels": [200.0],
-        "sizes":  ["big"],
-        "note": "Defense Drone · ต่ำกว่า 200 ซื้อได้เลย · รายได้โต 143%",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "LLY",
-        "company_name": "Eli Lilly and Company",
-        "category": "core",
-        "levels": [870.0, 893.0, 900.0],
-        "sizes":  ["small", "mid", "big"],
-        "note": "GLP-1 Platform · 1 ใน 10 นางฟ้า Phon",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "NOW",
-        "company_name": "ServiceNow Inc.",
-        "category": "core",
-        "levels": [100.0, 95.0, 80.0, 70.0],
-        "sizes":  ["small", "mid", "mid", "big"],
-        "note": "Phon: ห้ามมองข้ามเด็ดขาด · AI Control Tower",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "AXON",
-        "company_name": "Axon Enterprise Inc.",
-        "category": "growth",
-        "levels": [400.0, 395.0, 365.0, 340.0],
-        "sizes":  ["small", "small", "mid", "big"],
-        "note": "Public Safety AI · Near-monopoly SaaS",
+        "note": "AI + Azure Cloud · Phon เติมสะสมกลุ่มหลัก",
         "active": True,
         "created_date": "2024-01-15"
     },
@@ -119,8 +60,8 @@ DEFAULT_ALERTS = [
         "symbol": "META",
         "company_name": "Meta Platforms Inc.",
         "category": "core",
-        "levels": [540.0, 500.0],
-        "sizes":  ["small", "mid"],
+        "levels": [542.0, 520.0, 500.0],
+        "sizes":  ["small", "mid", "big"],
         "note": "AI + Social Monopoly · Consumer Monopoly",
         "active": True,
         "created_date": "2024-01-15"
@@ -129,19 +70,39 @@ DEFAULT_ALERTS = [
         "symbol": "AMZN",
         "company_name": "Amazon.com Inc.",
         "category": "core",
-        "levels": [215.0, 200.0],
-        "sizes":  ["small", "mid"],
+        "levels": [226.0, 200.0, 162.0],
+        "sizes":  ["small", "mid", "big"],
         "note": "AWS + AI + Robotics · Physical AI + Cloud",
         "active": True,
         "created_date": "2024-01-15"
     },
     {
-        "symbol": "MSFT",
-        "company_name": "Microsoft Corporation",
+        "symbol": "AAPL",
+        "company_name": "Apple Inc.",
         "category": "core",
-        "levels": [380.0, 360.0],
-        "sizes":  ["small", "mid"],
-        "note": "AI + Azure Cloud · Phon เติมสะสมกลุ่มหลัก",
+        "levels": [275.0, 242.0, 212.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Services growth · Ecosystem lock-in · Wide Moat",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "TSM",
+        "company_name": "Taiwan Semiconductor Mfg Co.",
+        "category": "core",
+        "levels": [384.0, 335.0, 300.0, 277.0],
+        "sizes":  ["small", "small", "mid", "big"],
+        "note": "Chip foundry monopoly · AI demand · Geopolitical risk",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "ORCL",
+        "company_name": "Oracle Corporation",
+        "category": "core",
+        "levels": [152.0, 134.0, 117.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Cloud DB · Enterprise SaaS · AI Infrastructure",
         "active": True,
         "created_date": "2024-01-15"
     },
@@ -162,6 +123,97 @@ DEFAULT_ALERTS = [
         "levels": [425.0, 417.0, 400.0, 365.0],
         "sizes":  ["small", "small", "mid", "big"],
         "note": "Robot Surgery · Wide Moat · Phon เติมสะสม",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "ETN",
+        "company_name": "Eaton Corporation",
+        "category": "core",
+        "levels": [380.0, 360.0, 340.0, 315.0],
+        "sizes":  ["small", "mid", "mid", "big"],
+        "note": "AI Power Infra · 3 ตัว AXON/NOW/ETN Phon ทยอยสะสม",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "AVAV",
+        "company_name": "AeroVironment Inc.",
+        "category": "core",
+        "levels": [200.0],
+        "sizes":  ["big"],
+        "note": "Defense Drone · ต่ำกว่า 200 ซื้อได้เลย · รายได้โต 143%",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "LLY",
+        "company_name": "Eli Lilly and Company",
+        "category": "core",
+        "levels": [870.0, 800.0, 750.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "GLP-1 Platform · 1 ใน 10 นางฟ้า Phon",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    # ── Growth ─────────────────────────────────────────────────────────────────
+    {
+        "symbol": "PLTR",
+        "company_name": "Palantir Technologies Inc.",
+        "category": "growth",
+        "levels": [106.0, 87.0, 80.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Phon ถือยาว · Top pick AI / Data",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "NFLX",
+        "company_name": "Netflix Inc.",
+        "category": "growth",
+        "levels": [70.0, 60.0],
+        "sizes":  ["small", "mid"],
+        "note": "Streaming monopoly · Ad-tier growth",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "NOW",
+        "company_name": "ServiceNow Inc.",
+        "category": "growth",
+        "levels": [90.0, 80.0],
+        "sizes":  ["small", "mid"],
+        "note": "Phon: ห้ามมองข้ามเด็ดขาด · AI Control Tower",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "AXON",
+        "company_name": "Axon Enterprise Inc.",
+        "category": "growth",
+        "levels": [400.0, 395.0, 365.0, 340.0],
+        "sizes":  ["small", "small", "mid", "big"],
+        "note": "Public Safety AI · Near-monopoly SaaS",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "RKLB",
+        "company_name": "Rocket Lab USA Inc.",
+        "category": "growth",
+        "levels": [80.0, 73.0, 57.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Space Launch · High Growth High Risk",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "CEG",
+        "company_name": "Constellation Energy Corporation",
+        "category": "growth",
+        "levels": [206.0, 200.0, 180.0, 170.0],
+        "sizes":  ["small", "small", "mid", "big"],
+        "note": "Nuclear Energy · ลงมา 27% YTD",
         "active": True,
         "created_date": "2024-01-15"
     },
@@ -205,6 +257,37 @@ DEFAULT_ALERTS = [
         "active": True,
         "created_date": "2024-01-15"
     },
+    # ── Defensive ──────────────────────────────────────────────────────────────
+    {
+        "symbol": "V",
+        "company_name": "Visa Inc.",
+        "category": "defensive",
+        "levels": [316.0, 300.0, 287.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Payment network monopoly · Wide Moat",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "MCD",
+        "company_name": "McDonald's Corporation",
+        "category": "defensive",
+        "levels": [265.0, 250.0, 236.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Global QSR · Wide Moat · Dividend",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
+    {
+        "symbol": "COST",
+        "company_name": "Costco Wholesale Corporation",
+        "category": "defensive",
+        "levels": [940.0, 840.0, 800.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "Membership model · Pricing power · Recession-resistant",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
     {
         "symbol": "NEE",
         "company_name": "NextEra Energy Inc.",
@@ -215,6 +298,17 @@ DEFAULT_ALERTS = [
         "active": True,
         "created_date": "2024-01-15"
     },
+    # ── Speculative ────────────────────────────────────────────────────────────
+    {
+        "symbol": "NBIS",
+        "company_name": "Nebius Group N.V.",
+        "category": "speculative",
+        "levels": [234.0, 200.0, 165.0],
+        "sizes":  ["small", "mid", "big"],
+        "note": "European AI cloud · GPU infrastructure · High risk",
+        "active": True,
+        "created_date": "2024-01-15"
+    },
     {
         "symbol": "OKLO",
         "company_name": "Oklo Inc.",
@@ -222,16 +316,6 @@ DEFAULT_ALERTS = [
         "levels": [20.0, 15.0],
         "sizes":  ["small", "mid"],
         "note": "Nuclear SMR · Pre-revenue · High Risk",
-        "active": True,
-        "created_date": "2024-01-15"
-    },
-    {
-        "symbol": "RKLB",
-        "company_name": "Rocket Lab USA Inc.",
-        "category": "speculative",
-        "levels": [20.0, 15.0],
-        "sizes":  ["small", "mid"],
-        "note": "Space Launch · High Growth High Risk",
         "active": True,
         "created_date": "2024-01-15"
     },
